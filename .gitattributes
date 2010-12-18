@@ -1,0 +1,95 @@
+.gitattributes eol=lf
+.gitignore eol=lf
+.gitmodules eol=lf
+
+# Components
+*.dll -text
+*.exe -text
+*.pdb -text
+*.obj -text
+*.ocx -text
+*.lnk -text
+*.so -text
+*.o -text
+*.bin -text
+*.netmodule -text
+*.lib -text
+*.snk -text
+
+# Misc
+*.dup2 -text
+
+# Office
+*.doc -text
+*.xls -text
+*.xla -text
+*.xlsm -text
+*.ppt -text
+*.one -text
+*.pdf -text
+*.chm -text
+*.xll -text
+
+# Media
+*.gif -text
+*.jpg -text
+*.jpeg -text
+*.png -text
+*.bmp -text
+*.ico -text
+*.wav -text
+*.mp3 -text
+*.wma -text
+*.tif -text
+*.tiff -text
+*.wmf -text
+*.asf -text
+*.mid -text
+*.ram -text
+*.mov -text
+*.avi -text
+*.mpg -text
+*.mpeg -text
+
+# Visual Basic
+*.frx -text
+
+# Java
+*.class -text
+
+# Archives
+*.zip -text
+*.rar -text
+*.ace -text
+*.tar -text
+*.gz -text
+*.tgz -text
+*.jar -text
+*.rpm -text
+*.bz -text
+*.bz2 -text
+
+# TradeStation
+*.eld -text
+*.tsd -text
+*.tsw -text
+
+# Unix
+*.sh eol=lf
+*.utxt eol=lf
+
+# Windows
+*.bat eol=crlf
+*.cmd eol=crlf
+*.sln eol=crlf
+*.vcproj eol=crlf
+*.vdproj eol=crlf
+*.csproj eol=crlf
+*.tdl eol=crlf
+*.licenses -text
+*.resources -text
+
+# KeePass
+*.lng -text
+*.pk -text
+*.pfx -text
