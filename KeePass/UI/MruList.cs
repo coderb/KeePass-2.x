@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ using System.Windows.Forms;
 using System.Diagnostics;
 
 using KeePass.Resources;
+
+using KeePassLib.Utility;
 
 namespace KeePass.UI
 {
@@ -58,10 +60,7 @@ namespace KeePass.UI
 		public uint MaxItemCount
 		{
 			get { return m_uMaxItemCount; }
-			set
-			{
-				m_uMaxItemCount = value;
-			}
+			set { m_uMaxItemCount = value; }
 		}
 
 		public uint ItemCount
@@ -87,7 +86,7 @@ namespace KeePass.UI
 			m_tsmiContainer = tsmiContainer;
 		}
 
-		public void AddItem(string strDisplayName, object oTag)
+		public void AddItem(string strDisplayName, object oTag, bool bUpdateMenu)
 		{
 			Debug.Assert(strDisplayName != null);
 			if(strDisplayName == null) throw new ArgumentNullException("strDisplayName");
@@ -96,23 +95,26 @@ namespace KeePass.UI
 
 			bool bExists = false;
 			foreach(KeyValuePair<string, object> kvp in m_vItems)
-				if(kvp.Key == strDisplayName)
+			{
+				Debug.Assert(kvp.Key != null);
+				if(kvp.Key.Equals(strDisplayName, StrUtil.CaseIgnoreCmp))
 				{
 					bExists = true;
 					break;
 				}
+			}
 
-			if(bExists) this.MoveItemToTop(strDisplayName);
+			if(bExists) MoveItemToTop(strDisplayName);
 			else
 			{
 				m_vItems.Insert(0, new KeyValuePair<string, object>(
 					strDisplayName, oTag));
 
-				if(m_vItems.Count >= m_uMaxItemCount)
+				if(m_vItems.Count > m_uMaxItemCount)
 					m_vItems.RemoveAt(m_vItems.Count - 1);
 			}
 
-			this.UpdateMenu();
+			if(bUpdateMenu) UpdateMenu();
 		}
 
 		public void UpdateMenu()
@@ -134,7 +136,7 @@ namespace KeePass.UI
 
 				m_tsmiContainer.DropDownItems.Add(new ToolStripSeparator());
 
-				ToolStripMenuItem tsmi = new ToolStripMenuItem(KPRes.ClearMRU);
+				ToolStripMenuItem tsmi = new ToolStripMenuItem(KPRes.ClearMru);
 				tsmi.Image = Properties.Resources.B16x16_EditDelete;
 				tsmi.Click += ClearHandler;
 				m_tsmiContainer.DropDownItems.Add(tsmi);
@@ -155,15 +157,33 @@ namespace KeePass.UI
 			return m_vItems[(int)uIndex];
 		}
 
+		public bool RemoveItem(string strDisplayName)
+		{
+			Debug.Assert(strDisplayName != null);
+			if(strDisplayName == null) throw new ArgumentNullException("strDisplayName");
+
+			for(int i = 0; i < m_vItems.Count; ++i)
+			{
+				KeyValuePair<string, object> kvp = m_vItems[i];
+				if(kvp.Key.Equals(strDisplayName, StrUtil.CaseIgnoreCmp))
+				{
+					m_vItems.RemoveAt(i);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		private void ClickedHandler(object sender, EventArgs args)
 		{
-			ToolStripMenuItem tsi = sender as ToolStripMenuItem;
+			ToolStripMenuItem tsi = (sender as ToolStripMenuItem);
 			if(tsi == null) { Debug.Assert(false); return; }
 
 			string strName = tsi.Text;
 			object oTag = tsi.Tag;
 
-			this.MoveItemToTop(strName);
+			MoveItemToTop(strName);
 
 			if(m_handler != null) m_handler.OnMruExecute(strName, oTag);
 		}
@@ -172,7 +192,8 @@ namespace KeePass.UI
 		{
 			for(int i = 0; i < m_vItems.Count; ++i)
 			{
-				if(m_vItems[i].Key == strName)
+				Debug.Assert(m_vItems[i].Key != null);
+				if(m_vItems[i].Key.Equals(strName, StrUtil.CaseIgnoreCmp))
 				{
 					KeyValuePair<string, object> t = m_vItems[i];
 					m_vItems.RemoveAt(i);

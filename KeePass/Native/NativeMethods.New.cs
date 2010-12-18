@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,11 +23,27 @@ using System.Security;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace KeePass.Native
 {
 	internal static partial class NativeMethods
 	{
+		internal static string GetWindowText(IntPtr hWnd)
+		{
+			int nLength = GetWindowTextLength(hWnd);
+			if(nLength <= 0) return string.Empty;
+
+			StringBuilder sb = new StringBuilder(nLength + 1);
+			GetWindowText(hWnd, sb, sb.Capacity);
+			return sb.ToString();
+		}
+
+		internal static int GetWindowStyle(IntPtr hWnd)
+		{
+			return GetWindowLong(hWnd, GWL_STYLE);
+		}
+
 		internal static bool EnsureForegroundWindow(IntPtr hWnd)
 		{
 			if(IsWindow(hWnd) == false)
@@ -59,9 +75,8 @@ namespace KeePass.Native
 			{
 				if(hWnd != hCurrentWnd)
 				{
-					uint uStyle = GetWindowLong(hWnd, GWL_STYLE);
-
-					if(((uStyle & WS_VISIBLE) != 0) &&
+					int nStyle = GetWindowStyle(hWnd);
+					if(((nStyle & WS_VISIBLE) != 0) &&
 						(GetWindowTextLength(hWnd) > 0))
 					{
 						break;
@@ -86,7 +101,8 @@ namespace KeePass.Native
 			return false;
 		}
 
-		public static void EnsureVisible(ListView lv, int nIndex, bool bPartialOK)
+		// Workaround for only partially visible list view items
+		/* public static void EnsureVisible(ListView lv, int nIndex, bool bPartialOK)
 		{
 			Debug.Assert(lv != null); if(lv == null) return;
 			Debug.Assert(nIndex >= 0); if(nIndex < 0) return;
@@ -99,6 +115,58 @@ namespace KeePass.Native
 					new IntPtr(nIndex), new IntPtr(nPartialOK));
 			}
 			catch(Exception) { Debug.Assert(false); }
+		} */
+
+		public static int GetScrollPosY(IntPtr hWnd)
+		{
+			try
+			{
+				SCROLLINFO si = new SCROLLINFO();
+				si.cbSize = (uint)Marshal.SizeOf(si);
+				si.fMask = (uint)ScrollInfoMask.SIF_POS;
+
+				if(GetScrollInfo(hWnd, (int)ScrollBarDirection.SB_VERT, ref si))
+					return si.nPos;
+
+				Debug.Assert(false);
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return 0;
 		}
+
+		public static void Scroll(ListView lv, int dx, int dy)
+		{
+			if(lv == null) throw new ArgumentNullException("lv");
+
+			try { SendMessage(lv.Handle, LVM_SCROLL, (IntPtr)dx, (IntPtr)dy); }
+			catch(Exception) { Debug.Assert(false); }
+		}
+
+		/* public static void ScrollAbsY(IntPtr hWnd, int y)
+		{
+			try
+			{
+				SCROLLINFO si = new SCROLLINFO();
+				si.cbSize = (uint)Marshal.SizeOf(si);
+				si.fMask = (uint)ScrollInfoMask.SIF_POS;
+				si.nPos = y;
+
+				SetScrollInfo(hWnd, (int)ScrollBarDirection.SB_VERT, ref si, true);
+			}
+			catch(Exception) { Debug.Assert(false); }
+		} */
+
+		/* public static void Scroll(IntPtr h, int dx, int dy)
+		{
+			if(h == IntPtr.Zero) { Debug.Assert(false); return; } // No throw
+
+			try
+			{
+				ScrollWindowEx(h, dx, dy, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero,
+					IntPtr.Zero, SW_INVALIDATE);
+			}
+			catch(Exception) { Debug.Assert(false); }
+		} */
 	}
 }

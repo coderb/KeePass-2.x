@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,12 +24,15 @@ using System.IO;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Xml;
+using System.Threading;
 
 using KeePass.App;
 using KeePass.DataExchange.Formats;
 using KeePass.Forms;
+using KeePass.Native;
 using KeePass.Resources;
 using KeePass.UI;
+using KeePass.Util;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
@@ -40,57 +43,54 @@ namespace KeePass.DataExchange
 {
 	public static class ImportUtil
 	{
-		public static void ImportInto(PwDatabase pwStorage, out bool bAppendedToRootOnly)
+		public static bool ImportInto(PwDatabase pwStorage, out bool bAppendedToRootOnly)
 		{
 			bAppendedToRootOnly = false;
 
 			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
-			if(!pwStorage.IsOpen) return;
-			if(!AppPolicy.Try(AppPolicyID.Import)) return;
+			if(!pwStorage.IsOpen) return false;
+			if(!AppPolicy.Try(AppPolicyId.Import)) return false;
 
-			ImportDataForm dlgFmt = new ImportDataForm();
-			dlgFmt.InitEx(pwStorage);
+			ExchangeDataForm dlgFmt = new ExchangeDataForm();
+			dlgFmt.InitEx(false, pwStorage, pwStorage.RootGroup);
+
 			if(dlgFmt.ShowDialog() == DialogResult.OK)
 			{
 				Debug.Assert(dlgFmt.ResultFormat != null);
 				if(dlgFmt.ResultFormat == null)
 				{
 					MessageService.ShowWarning(KPRes.ImportFailed);
-					return;
+					return false;
 				}
 
-				bAppendedToRootOnly = dlgFmt.ResultFormat.AppendsToRootGroupOnly;
+				bAppendedToRootOnly = dlgFmt.ResultFormat.ImportAppendsToRootGroupOnly;
 
 				List<IOConnectionInfo> lConnections = new List<IOConnectionInfo>();
 				foreach(string strSelFile in dlgFmt.ResultFiles)
 					lConnections.Add(IOConnectionInfo.FromPath(strSelFile));
 
 				PerformImport(pwStorage, dlgFmt.ResultFormat, lConnections.ToArray(),
-					false, null);
+					false, null, false);
 			}
+			else return false;
+
+			return true;
 		}
 
-		public static bool Synchronize(PwDatabase pwStorage, IUIOperations uiOps,
+		public static bool? Synchronize(PwDatabase pwStorage, IUIOperations uiOps,
 			bool bOpenFromUrl)
 		{
 			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
-			if(!pwStorage.IsOpen) return false;
-			if(!AppPolicy.Try(AppPolicyID.Import)) return false;
+			if(!pwStorage.IsOpen) return null;
+			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
 
 			List<IOConnectionInfo> vConnections = new List<IOConnectionInfo>();
 			if(bOpenFromUrl == false)
 			{
-				OpenFileDialog ofd = new OpenFileDialog();
-				ofd.AddExtension = false;
-				ofd.CheckFileExists = true;
-				ofd.CheckPathExists = true;
-				ofd.Filter = KPRes.AllFiles + @" (*.*)|*.*";
-				ofd.Multiselect = true;
-				ofd.RestoreDirectory = true;
-				ofd.Title = KPRes.Synchronize;
-				ofd.ValidateNames = true;
+				OpenFileDialog ofd = UIUtil.CreateOpenFileDialog(KPRes.Synchronize,
+					UIUtil.CreateFileTypeFilter(null, null, true), 1, null, true, true);
 
-				if(ofd.ShowDialog() != DialogResult.OK) return true;
+				if(ofd.ShowDialog() != DialogResult.OK) return null;
 
 				foreach(string strSelFile in ofd.FileNames)
 					vConnections.Add(IOConnectionInfo.FromPath(strSelFile));
@@ -100,17 +100,33 @@ namespace KeePass.DataExchange
 				IOConnectionForm iocf = new IOConnectionForm();
 				iocf.InitEx(false, new IOConnectionInfo(), false, true);
 
-				if(iocf.ShowDialog() != DialogResult.OK) return true;
+				if(iocf.ShowDialog() != DialogResult.OK) return null;
 
 				vConnections.Add(iocf.IOConnectionInfo);
 			}
 
-			return PerformImport(pwStorage, new KeePassKdb2x(),
-				vConnections.ToArray(), true, uiOps);
+			return PerformImport(pwStorage, new KeePassKdb2x(), vConnections.ToArray(),
+				true, uiOps, false);
 		}
 
-		private static bool PerformImport(PwDatabase pwDatabase, FormatImporter fmtImp,
-			IOConnectionInfo[] vConnections, bool bSynchronize, IUIOperations uiOps)
+		public static bool Synchronize(PwDatabase pwStorage, IUIOperations uiOps,
+			IOConnectionInfo iocSyncWith, bool bForceSave)
+		{
+			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
+			if(!pwStorage.IsOpen) return false;
+			if(iocSyncWith == null) throw new ArgumentNullException("iocSyncWith");
+			if(!AppPolicy.Try(AppPolicyId.Import)) return false;
+
+			List<IOConnectionInfo> vConnections = new List<IOConnectionInfo>();
+			vConnections.Add(iocSyncWith);
+
+			return PerformImport(pwStorage, new KeePassKdb2x(), vConnections.ToArray(),
+				true, uiOps, bForceSave);
+		}
+
+		private static bool PerformImport(PwDatabase pwDatabase, FileFormatProvider fmtImp,
+			IOConnectionInfo[] vConnections, bool bSynchronize, IUIOperations uiOps,
+			bool bForceSave)
 		{
 			if(fmtImp.TryBeginImport() == false) return false;
 
@@ -230,25 +246,25 @@ namespace KeePass.DataExchange
 			if(bSynchronize && bAllSuccess)
 			{
 				Debug.Assert(uiOps != null);
-				if(uiOps == null) throw new ArgumentNullException();
+				if(uiOps == null) throw new ArgumentNullException("uiOps");
 
-				if(uiOps.UIFileSave())
+				if(uiOps.UIFileSave(bForceSave))
 				{
 					foreach(IOConnectionInfo ioc in vConnections)
 					{
 						try
 						{
-							if(pwDatabase.IOConnectionInfo.IsLocalFile())
+							if(pwDatabase.IOConnectionInfo.Path != ioc.Path)
 							{
-								if((pwDatabase.IOConnectionInfo.Path != ioc.Path) &&
+								if(pwDatabase.IOConnectionInfo.IsLocalFile() &&
 									ioc.IsLocalFile())
 								{
 									File.Copy(pwDatabase.IOConnectionInfo.Path,
 										ioc.Path, true);
 								}
+								else pwDatabase.SaveAs(ioc, false, null);
 							}
-							else
-								pwDatabase.SaveAs(ioc, false, null);
+							else { Debug.Assert(false); }
 						}
 						catch(Exception exSync)
 						{
@@ -269,7 +285,7 @@ namespace KeePass.DataExchange
 					bAllSuccess = false;
 				}
 			}
-			else if(bSynchronize) // Synchronize but not successfully imported
+			else if(bSynchronize) // Synchronized but not successfully imported
 			{
 				MessageService.ShowWarning(KPRes.SyncFailed,
 					pwDatabase.IOConnectionInfo.GetDisplayName());
@@ -430,6 +446,103 @@ namespace KeePass.DataExchange
 				return PwDefs.NotesField;
 
 			return string.Empty;
+		}
+
+		public static bool EntryEquals(PwEntry pe1, PwEntry pe2)
+		{
+			if(pe1.ParentGroup == null) return false;
+			if(pe2.ParentGroup == null) return false;
+
+			if(pe1.ParentGroup.Name != pe2.ParentGroup.Name)
+				return false;
+
+			if(pe1.Strings.ReadSafe(PwDefs.TitleField) !=
+				pe2.Strings.ReadSafe(PwDefs.TitleField))
+			{
+				return false;
+			}
+
+			if(pe1.Strings.ReadSafe(PwDefs.UserNameField) !=
+				pe2.Strings.ReadSafe(PwDefs.UserNameField))
+			{
+				return false;
+			}
+
+			if(pe1.Strings.ReadSafe(PwDefs.PasswordField) !=
+				pe2.Strings.ReadSafe(PwDefs.PasswordField))
+			{
+				return false;
+			}
+
+			if(pe1.Strings.ReadSafe(PwDefs.UrlField) !=
+				pe2.Strings.ReadSafe(PwDefs.UrlField))
+			{
+				return false;
+			}
+
+			if(pe1.Strings.ReadSafe(PwDefs.NotesField) !=
+				pe2.Strings.ReadSafe(PwDefs.NotesField))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		internal static string GuiSendRetrieve(string strSendPrefix)
+		{
+			if(strSendPrefix.Length > 0)
+				GuiSendKeysPrc(strSendPrefix);
+
+			return GuiRetrieveDataField();
+		}
+
+		private static string GuiRetrieveDataField()
+		{
+			Clipboard.Clear();
+			Application.DoEvents();
+
+			GuiSendKeysPrc(@"^c");
+
+			if(Clipboard.ContainsText())
+				return Clipboard.GetText();
+
+			return string.Empty;
+		}
+
+		internal static void GuiSendKeysPrc(string strSend)
+		{
+			if(strSend.Length > 0)
+				SendInputEx.SendKeysWait(strSend, false);
+
+			Application.DoEvents();
+			Thread.Sleep(100);
+			Application.DoEvents();
+		}
+		
+		internal static void GuiSendWaitWindowChange(string strSend)
+		{
+			IntPtr ptrCur = NativeMethods.GetForegroundWindow();
+
+			ImportUtil.GuiSendKeysPrc(strSend);
+
+			int nRound = 0;
+			while(true)
+			{
+				Application.DoEvents();
+
+				IntPtr ptr = NativeMethods.GetForegroundWindow();
+				if(ptr != ptrCur) break;
+
+				++nRound;
+				if(nRound > 1000)
+					throw new InvalidOperationException();
+
+				Thread.Sleep(50);
+			}
+
+			Thread.Sleep(100);
+			Application.DoEvents();
 		}
 	}
 }

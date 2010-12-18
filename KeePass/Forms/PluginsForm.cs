@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -67,6 +67,12 @@ namespace KeePass.Forms
 				Properties.Resources.B48x48_BlockDevice, KPRes.Plugins,
 				KPRes.PluginsDesc);
 			this.Icon = Properties.Resources.KeePass;
+
+			m_lvPlugins.Columns.Add(KPRes.Plugin, 197);
+			m_lvPlugins.Columns.Add(KPRes.Version, 106);
+			m_lvPlugins.Columns.Add(KPRes.Author, 136);
+			m_lvPlugins.Columns.Add(KPRes.Description, 0);
+			m_lvPlugins.Columns.Add(KPRes.File, 119);
 
 			m_ilIcons.ImageSize = new Size(16, 16);
 			m_ilIcons.ColorDepth = ColorDepth.Depth32Bit;

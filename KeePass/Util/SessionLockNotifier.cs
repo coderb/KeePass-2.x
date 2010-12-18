@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,8 +32,11 @@ namespace KeePass.Util
 		private bool m_bEventsRegistered = false;
 		private EventHandler m_evHandler = null;
 
-		public SessionLockNotifier()
+		private bool m_bNotifyOnSuspend;
+
+		public SessionLockNotifier(bool bNotifyOnSuspend)
 		{
+			m_bNotifyOnSuspend = bNotifyOnSuspend;
 		}
 
 #if DEBUG
@@ -51,8 +54,11 @@ namespace KeePass.Util
 			{
 				SystemEvents.SessionEnding += this.OnSessionEnding;
 				SystemEvents.SessionSwitch += this.OnSessionSwitch;
+
+				if(m_bNotifyOnSuspend)
+					SystemEvents.PowerModeChanged += this.OnPowerModeChanged;
 			}
-			catch(Exception) { Debug.Assert(false); }
+			catch(Exception) { Debug.Assert(WinUtil.IsWindows2000); } // 2000 always fails
 
 			m_bEventsRegistered = true;
 
@@ -67,8 +73,11 @@ namespace KeePass.Util
 				{
 					SystemEvents.SessionEnding -= this.OnSessionEnding;
 					SystemEvents.SessionSwitch -= this.OnSessionSwitch;
+
+					if(m_bNotifyOnSuspend)
+						SystemEvents.PowerModeChanged -= this.OnPowerModeChanged;
 				}
-				catch(Exception) { Debug.Assert(false); }
+				catch(Exception) { Debug.Assert(WinUtil.IsWindows2000); } // 2000 always fails
 
 				m_bEventsRegistered = false;
 			}
@@ -82,6 +91,12 @@ namespace KeePass.Util
 		private void OnSessionSwitch(object sender, SessionSwitchEventArgs e)
 		{
 			if(m_evHandler != null) m_evHandler(sender, e);
+		}
+
+		private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+		{
+			if((m_evHandler != null) && (e.Mode == PowerModes.Suspend))
+				m_evHandler(sender, e);
 		}
 	}
 }

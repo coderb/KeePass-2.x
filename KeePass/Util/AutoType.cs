@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ using KeePass.App;
 using KeePass.Forms;
 using KeePass.Native;
 using KeePass.Resources;
+using KeePass.Util.Spr;
 
 using KeePassLib;
 using KeePassLib.Security;
@@ -40,27 +41,40 @@ namespace KeePass.Util
 {
 	public static class AutoType
 	{
-		private const StringComparison StrCaseIgnoreCmp = StringComparison.OrdinalIgnoreCase;
-
 		private static bool MatchWindows(string strFilter, string strWindow)
 		{
 			Debug.Assert(strFilter != null); if(strFilter == null) return false;
 			Debug.Assert(strWindow != null); if(strWindow == null) return false;
 
 			string strF = strFilter.Trim();
-			bool bArbStart = strF.StartsWith("*"), bArbEnd = strF.EndsWith("*");
+
+			/* bool bArbStart = strF.StartsWith("*"), bArbEnd = strF.EndsWith("*");
 
 			if(bArbStart) strF = strF.Remove(0, 1);
 			if(bArbEnd) strF = strF.Substring(0, strF.Length - 1);
 
 			if(bArbStart && bArbEnd)
-				return (strWindow.IndexOf(strF, StrCaseIgnoreCmp) >= 0);
+				return (strWindow.IndexOf(strF, StrUtil.CaseIgnoreCmp) >= 0);
 			else if(bArbStart)
-				return strWindow.EndsWith(strF, StrCaseIgnoreCmp);
+				return strWindow.EndsWith(strF, StrUtil.CaseIgnoreCmp);
 			else if(bArbEnd)
-				return strWindow.StartsWith(strF, StrCaseIgnoreCmp);
+				return strWindow.StartsWith(strF, StrUtil.CaseIgnoreCmp);
 
-			return strWindow.Equals(strF, StrCaseIgnoreCmp);
+			return strWindow.Equals(strF, StrUtil.CaseIgnoreCmp); */
+
+			if(strF.StartsWith(@"//") && strF.EndsWith(@"//") && (strF.Length > 4))
+			{
+				try
+				{
+					Regex rx = new Regex(strF.Substring(2, strF.Length - 4),
+						RegexOptions.IgnoreCase);
+
+					return rx.IsMatch(strWindow);					
+				}
+				catch(Exception) { }
+			}
+
+			return StrUtil.SimplePatternMatch(strF, strWindow, StrUtil.CaseIgnoreCmp);
 		}
 
 		private static bool Execute(string strSeq, PwEntry pweData)
@@ -68,18 +82,15 @@ namespace KeePass.Util
 			Debug.Assert(strSeq != null); if(strSeq == null) return false;
 			Debug.Assert(pweData != null); if(pweData == null) return false;
 
-			if(!pweData.AutoType.Enabled) return false;
-			if(!AppPolicy.Try(AppPolicyID.AutoType)) return false;
+			if(!pweData.GetAutoTypeEnabled()) return false;
+			if(!AppPolicy.Try(AppPolicyId.AutoType)) return false;
 
 			PwDatabase pwDatabase = null;
 			try { pwDatabase = Program.MainForm.PluginHost.Database; }
 			catch(Exception) { pwDatabase = null; }
 
-			string strSend = strSeq;
-			strSend = StrUtil.FillPlaceholders(strSend, pweData,
-				WinUtil.GetExecutable(), pwDatabase, false, true, 0);
-			strSend = AppLocator.FillPlaceholders(strSend, true);
-			strSend = EntryUtil.FillPlaceholders(strSend, pweData, true);
+			string strSend = SprEngine.Compile(strSeq, true, pweData,
+				pwDatabase, true, false);
 
 			string strError = ValidateAutoTypeSequence(strSend);
 			if(strError != null)
@@ -88,7 +99,7 @@ namespace KeePass.Util
 				return false;
 			}
 
-			bool bObfuscate = !(pweData.AutoType.ObfuscationOptions ==
+			bool bObfuscate = (pweData.AutoType.ObfuscationOptions !=
 				AutoTypeObfuscationOptions.None);
 
 			Application.DoEvents();
@@ -99,6 +110,7 @@ namespace KeePass.Util
 				MessageService.ShowWarning(excpAT);
 			}
 
+			pweData.Touch(false);
 			return true;
 		}
 
@@ -109,19 +121,25 @@ namespace KeePass.Util
 			string strSeq = GetSequenceForWindow(pwe, strWindow, false);
 			if((strSeq == null) || (strSeq.Length == 0)) return false;
 
+			if(Program.Config.Integration.AutoTypePrependInitSequenceForIE &&
+				WinUtil.IsInternetExplorer7Window(strWindow))
+			{
+				strSeq = @"{DELAY 50}1{DELAY 50}{BACKSPACE}" + strSeq;
+			}
+
 			AutoType.Execute(strSeq, pwe);
 			return true;
 		}
 
-		private static string GetSequenceForWindow(PwEntry pwe, string strWindow, bool bRequireDefinedWindow)
+		private static string GetSequenceForWindow(PwEntry pwe, string strWindow,
+			bool bRequireDefinedWindow)
 		{
 			Debug.Assert(strWindow != null); if(strWindow == null) return null;
 			Debug.Assert(pwe != null); if(pwe == null) return null;
 
-			if(pwe.AutoType.Enabled == false) return null;
+			if(!pwe.GetAutoTypeEnabled()) return null;
 
 			string strSeq = null;
-
 			foreach(KeyValuePair<string, string> kvp in pwe.AutoType.WindowSequencePairs)
 			{
 				if(MatchWindows(kvp.Key, strWindow))
@@ -132,9 +150,8 @@ namespace KeePass.Util
 			}
 
 			string strTitle = pwe.Strings.ReadSafe(PwDefs.TitleField);
-			if(((strSeq == null) || (strSeq.Length == 0)) &&
-				(strTitle.Length > 0) &&
-				(strWindow.IndexOf(strTitle, StrCaseIgnoreCmp) >= 0))
+			if(string.IsNullOrEmpty(strSeq) && (strTitle.Length > 0) &&
+				(strWindow.IndexOf(strTitle, StrUtil.CaseIgnoreCmp) >= 0))
 			{
 				strSeq = pwe.AutoType.DefaultSequence;
 				Debug.Assert(strSeq != null);
@@ -224,7 +241,10 @@ namespace KeePass.Util
 
 		public static bool PerformIntoPreviousWindow(IntPtr hWndCurrent, PwEntry pe)
 		{
-			try { NativeMethods.LoseFocus(hWndCurrent); }
+			try
+			{
+				if(!NativeMethods.LoseFocus(hWndCurrent)) { Debug.Assert(false); }
+			}
 			catch(Exception) { Debug.Assert(false); }
 
 			return PerformIntoCurrentWindow(pe);

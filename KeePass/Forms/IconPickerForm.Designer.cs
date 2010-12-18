@@ -29,9 +29,9 @@
 		private void InitializeComponent()
 		{
 			this.m_btnCancel = new System.Windows.Forms.Button();
-			this.m_lvIcons = new System.Windows.Forms.ListView();
+			this.m_lvIcons = new KeePass.UI.CustomListViewEx();
 			this.m_btnOK = new System.Windows.Forms.Button();
-			this.m_lvCustomIcons = new System.Windows.Forms.ListView();
+			this.m_lvCustomIcons = new KeePass.UI.CustomListViewEx();
 			this.m_radioStandard = new System.Windows.Forms.RadioButton();
 			this.m_radioCustom = new System.Windows.Forms.RadioButton();
 			this.m_lblSeparator = new System.Windows.Forms.Label();
@@ -59,7 +59,7 @@
 			this.m_lvIcons.Size = new System.Drawing.Size(462, 197);
 			this.m_lvIcons.TabIndex = 0;
 			this.m_lvIcons.UseCompatibleStateImageBehavior = false;
-			this.m_lvIcons.View = System.Windows.Forms.View.SmallIcon;
+			this.m_lvIcons.View = System.Windows.Forms.View.List;
 			this.m_lvIcons.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.OnIconsItemSelectionChanged);
 			// 
 			// m_btnOK
@@ -81,7 +81,7 @@
 			this.m_lvCustomIcons.Size = new System.Drawing.Size(381, 121);
 			this.m_lvCustomIcons.TabIndex = 2;
 			this.m_lvCustomIcons.UseCompatibleStateImageBehavior = false;
-			this.m_lvCustomIcons.View = System.Windows.Forms.View.SmallIcon;
+			this.m_lvCustomIcons.View = System.Windows.Forms.View.List;
 			this.m_lvCustomIcons.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.OnCustomIconsItemSelectionChanged);
 			// 
 			// m_radioStandard
@@ -161,8 +161,8 @@
 			this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Icon Picker";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -171,9 +171,9 @@
 		#endregion
 
 		private System.Windows.Forms.Button m_btnCancel;
-		private System.Windows.Forms.ListView m_lvIcons;
+		private KeePass.UI.CustomListViewEx m_lvIcons;
 		private System.Windows.Forms.Button m_btnOK;
-		private System.Windows.Forms.ListView m_lvCustomIcons;
+		private KeePass.UI.CustomListViewEx m_lvCustomIcons;
 		private System.Windows.Forms.RadioButton m_radioStandard;
 		private System.Windows.Forms.RadioButton m_radioCustom;
 		private System.Windows.Forms.Label m_lblSeparator;

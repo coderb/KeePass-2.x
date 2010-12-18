@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ namespace KeePass.Forms
 		private bool m_bInitializing = false;
 
 		private uint m_uStartOffset = 0;
+		private BinaryDataClass m_bdc = BinaryDataClass.Unknown;
 
 		private RichTextBoxContextMenu m_ctxText = new RichTextBoxContextMenu();
 
@@ -64,12 +65,15 @@ namespace KeePass.Forms
 			Debug.Assert(m_pbData != null);
 			if(m_pbData == null) throw new InvalidOperationException();
 
-			this.Icon = KeePass.Properties.Resources.KeePass;
-
 			GlobalWindowManager.AddWindow(this);
 
+			this.Icon = Properties.Resources.KeePass;
+
+			m_tslViewer.Text = KPRes.ShowIn + ":";
+			m_tslEncoding.Text = KPRes.Encoding + ":";
+
 			if(m_strDataDesc.Length > 0)
-				this.Text = this.Text + @" [" + m_strDataDesc + @"]";
+				this.Text = m_strDataDesc + " - " + this.Text;
 
 			this.DoubleBuffered = true;
 
@@ -85,7 +89,7 @@ namespace KeePass.Forms
 			m_picBox.Dock = DockStyle.Fill;
 
 			m_tscEncoding.Items.Add(BinaryDataClassifier.BdeAnsi + " (" +
-				KPRes.SystemCodepage + ")");
+				KPRes.SystemCodePage + ")");
 			m_tscEncoding.Items.Add(BinaryDataClassifier.BdeAscii);
 			m_tscEncoding.Items.Add(BinaryDataClassifier.BdeUtf7);
 			m_tscEncoding.Items.Add(BinaryDataClassifier.BdeUtf8);
@@ -117,13 +121,12 @@ namespace KeePass.Forms
 			m_tscViewers.Items.Add(KPRes.ImageViewer);
 			m_tscViewers.Items.Add(KPRes.WebBrowser);
 
-			BinaryDataClass bdc = BinaryDataClassifier.ClassifyUrl(m_strDataDesc);
-			if(bdc == BinaryDataClass.Unknown)
-				bdc = BinaryDataClassifier.ClassifyData(m_pbData);
+			m_bdc = BinaryDataClassifier.Classify(m_strDataDesc, m_pbData);
 
-			if(bdc == BinaryDataClass.Text) m_tscViewers.SelectedIndex = 0;
-			else if(bdc == BinaryDataClass.Image) m_tscViewers.SelectedIndex = 1;
-			else if(bdc == BinaryDataClass.WebDocument) m_tscViewers.SelectedIndex = 2;
+			if((m_bdc == BinaryDataClass.Text) || (m_bdc == BinaryDataClass.RichText))
+				m_tscViewers.SelectedIndex = 0;
+			else if(m_bdc == BinaryDataClass.Image) m_tscViewers.SelectedIndex = 1;
+			else if(m_bdc == BinaryDataClass.WebDocument) m_tscViewers.SelectedIndex = 2;
 			else m_tscViewers.SelectedIndex = 0;
 
 			m_bInitializing = false;
@@ -141,8 +144,8 @@ namespace KeePass.Forms
 			{
 				string strEnc = m_tscEncoding.Text;
 
-				if(strEnc == BinaryDataClassifier.BdeAnsi + " (" +
-					KPRes.SystemCodepage + ")")
+				if(strEnc == (BinaryDataClassifier.BdeAnsi + " (" +
+					KPRes.SystemCodePage + ")"))
 				{
 					enc = Encoding.Default;
 				}
@@ -184,16 +187,16 @@ namespace KeePass.Forms
 				if(strViewer == KPRes.TextViewer)
 				{
 					string strData = BinaryDataToString(enc);
-					m_rtbText.Text = strData;
+
+					if(m_bdc == BinaryDataClass.RichText) m_rtbText.Rtf = strData;
+					else m_rtbText.Text = strData;
 
 					m_rtbText.Visible = true;
 				}
 				else if(strViewer == KPRes.ImageViewer)
 				{
-					MemoryStream ms = new MemoryStream(m_pbData, false);
-					Image img = Image.FromStream(ms);
+					Image img = UIUtil.LoadImage(m_pbData);
 					m_picBox.Image = img;
-					ms.Close();
 
 					m_pnlImageViewer.Visible = true;
 					m_picBox.Visible = true;
@@ -203,8 +206,8 @@ namespace KeePass.Forms
 				else if(strViewer == KPRes.WebBrowser)
 				{
 					string strData = BinaryDataToString(enc);
-					m_webBrowser.AllowNavigation = true;
-					m_webBrowser.DocumentText = strData;
+
+					UIUtil.SetWebBrowserDocument(m_webBrowser, strData);
 
 					m_webBrowser.Visible = true;
 				}
@@ -239,7 +242,6 @@ namespace KeePass.Forms
 		private void OnFormClosing(object sender, FormClosingEventArgs e)
 		{
 			m_ctxText.Detach();
-
 			GlobalWindowManager.RemoveWindow(this);
 		}
 	}

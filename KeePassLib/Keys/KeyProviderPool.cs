@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,21 +46,33 @@ namespace KeePassLib.Keys
 
 		public void Add(KeyProvider prov)
 		{
-			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException();
+			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException("prov");
 
 			m_vProviders.Add(prov);
 		}
 
 		public bool Remove(KeyProvider prov)
 		{
-			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException();
+			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException("prov");
 
 			return m_vProviders.Remove(prov);
 		}
 
+		public KeyProvider Get(string strProviderName)
+		{
+			if(strProviderName == null) throw new ArgumentNullException("strProviderName");
+
+			foreach(KeyProvider prov in m_vProviders)
+			{
+				if(prov.Name == strProviderName) return prov;
+			}
+
+			return null;
+		}
+
 		public bool IsKeyProvider(string strName)
 		{
-			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException();
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
 
 			foreach(KeyProvider prov in m_vProviders)
 			{
@@ -70,14 +82,20 @@ namespace KeePassLib.Keys
 			return false;
 		}
 
-		public byte[] GetKey(string strProviderName)
+		internal byte[] GetKey(string strProviderName, KeyProviderQueryContext ctx,
+			out bool bPerformHash)
 		{
-			Debug.Assert(strProviderName != null); if(strProviderName == null) throw new ArgumentNullException();
+			Debug.Assert(strProviderName != null); if(strProviderName == null) throw new ArgumentNullException("strProviderName");
+
+			bPerformHash = true;
 
 			foreach(KeyProvider prov in m_vProviders)
 			{
 				if(prov.Name == strProviderName)
-					return prov.GetKey();
+				{
+					bPerformHash = !prov.DirectKey;
+					return prov.GetKey(ctx);
+				}
 			}
 
 			Debug.Assert(false);

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,6 +43,11 @@ namespace KeePass.Forms
 		private bool m_bCreatingNew = false;
 		private PwDatabase m_pwDatabase = null;
 
+		private string m_strAutoCreateNew = "(" + KPRes.AutoCreateNew + ")";
+		private Dictionary<int, PwUuid> m_dictRecycleBinGroups = new Dictionary<int, PwUuid>();
+
+		private Dictionary<int, PwUuid> m_dictEntryTemplateGroups = new Dictionary<int, PwUuid>();
+
 		public DatabaseSettingsForm()
 		{
 			InitializeComponent();
@@ -53,13 +58,13 @@ namespace KeePass.Forms
 		{
 			m_bCreatingNew = bCreatingNew;
 
-			Debug.Assert(pwDatabase != null); if(pwDatabase == null) throw new ArgumentNullException();
+			Debug.Assert(pwDatabase != null); if(pwDatabase == null) throw new ArgumentNullException("pwDatabase");
 			m_pwDatabase = pwDatabase;
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_pwDatabase != null); if(m_pwDatabase == null) throw new ArgumentNullException();
+			Debug.Assert(m_pwDatabase != null); if(m_pwDatabase == null) throw new InvalidOperationException();
 
 			GlobalWindowManager.AddWindow(this);
 
@@ -68,6 +73,8 @@ namespace KeePass.Forms
 				Properties.Resources.B48x48_Ark, KPRes.DatabaseSettings,
 				KPRes.DatabaseSettingsDesc);
 			this.Icon = Properties.Resources.KeePass;
+
+			m_ttRect.SetToolTip(m_lnkCompute1SecDelay, KPRes.TransformationRounds1SecHint);
 
 			m_tbDbName.PromptText = KPRes.DatabaseNamePrompt;
 			m_tbDbDesc.PromptText = KPRes.DatabaseDescPrompt;
@@ -95,7 +102,7 @@ namespace KeePass.Forms
 			m_lbMemProt.Items.Add(KPRes.Title, m_pwDatabase.MemoryProtection.ProtectTitle);
 			m_lbMemProt.Items.Add(KPRes.UserName, m_pwDatabase.MemoryProtection.ProtectUserName);
 			m_lbMemProt.Items.Add(KPRes.Password, m_pwDatabase.MemoryProtection.ProtectPassword);
-			m_lbMemProt.Items.Add(KPRes.URL, m_pwDatabase.MemoryProtection.ProtectUrl);
+			m_lbMemProt.Items.Add(KPRes.Url, m_pwDatabase.MemoryProtection.ProtectUrl);
 			m_lbMemProt.Items.Add(KPRes.Notes, m_pwDatabase.MemoryProtection.ProtectNotes);
 
 			// m_cbAutoEnableHiding.Checked = m_pwDatabase.MemoryProtection.AutoEnableVisualHiding;
@@ -106,6 +113,35 @@ namespace KeePass.Forms
 			else if(m_pwDatabase.Compression == PwCompressionAlgorithm.GZip)
 				m_rbGZip.Checked = true;
 			else { Debug.Assert(false); }
+
+			InitRecycleBinTab();
+			InitTemplatesTab();
+		}
+
+		private void InitRecycleBinTab()
+		{
+			m_cbRecycleBin.Checked = m_pwDatabase.RecycleBinEnabled;
+
+			m_cmbRecycleBin.Items.Add(m_strAutoCreateNew);
+			m_dictRecycleBinGroups[0] = PwUuid.Zero;
+
+			int iSelect;
+			UIUtil.CreateGroupList(m_pwDatabase.RootGroup, m_cmbRecycleBin,
+				m_dictRecycleBinGroups, m_pwDatabase.RecycleBinUuid, out iSelect);
+
+			m_cmbRecycleBin.SelectedIndex = Math.Max(0, iSelect);
+		}
+
+		private void InitTemplatesTab()
+		{
+			m_cmbEntryTemplates.Items.Add("(" + KPRes.None + ")");
+			m_dictEntryTemplateGroups[0] = PwUuid.Zero;
+
+			int iSelect;
+			UIUtil.CreateGroupList(m_pwDatabase.RootGroup, m_cmbEntryTemplates,
+				m_dictEntryTemplateGroups, m_pwDatabase.EntryTemplatesGroup, out iSelect);
+
+			m_cmbEntryTemplates.SelectedIndex = Math.Max(0, iSelect);
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
@@ -139,6 +175,17 @@ namespace KeePass.Forms
 				m_pwDatabase.MemoryProtection.ProtectNotes, PwDefs.NotesField);
 
 			// m_pwDatabase.MemoryProtection.AutoEnableVisualHiding = m_cbAutoEnableHiding.Checked;
+
+			m_pwDatabase.RecycleBinEnabled = m_cbRecycleBin.Checked;
+			int iRecBinSel = m_cmbRecycleBin.SelectedIndex;
+			if(m_dictRecycleBinGroups.ContainsKey(iRecBinSel))
+				m_pwDatabase.RecycleBinUuid = m_dictRecycleBinGroups[iRecBinSel];
+			else m_pwDatabase.RecycleBinUuid = PwUuid.Zero;
+
+			int iTemplSel = m_cmbEntryTemplates.SelectedIndex;
+			if(m_dictEntryTemplateGroups.ContainsKey(iTemplSel))
+				m_pwDatabase.EntryTemplatesGroup = m_dictEntryTemplateGroups[iTemplSel];
+			else m_pwDatabase.EntryTemplatesGroup = PwUuid.Zero;
 		}
 
 		private bool UpdateMemoryProtection(int nIndex, bool bOldSetting, string strFieldID)

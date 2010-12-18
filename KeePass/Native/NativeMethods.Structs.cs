@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,9 +29,11 @@ namespace KeePass.Native
 {
 	internal static partial class NativeMethods
 	{
-		[StructLayout(LayoutKind.Sequential)]
-		internal struct MOUSEINPUT
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		internal struct MOUSEINPUT32_WithSkip
 		{
+			public uint __Unused0; // See INPUT32 structure
+
 			public int X;
 			public int Y;
 			public uint MouseData;
@@ -40,9 +42,11 @@ namespace KeePass.Native
 			public IntPtr ExtraInfo;
 		}
 
-		[StructLayout(LayoutKind.Sequential)]
-		internal struct KEYBDINPUT
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		internal struct KEYBDINPUT32_WithSkip
 		{
+			public uint __Unused0; // See INPUT32 structure
+
 			public ushort VirtualKeyCode;
 			public ushort ScanCode;
 			public uint Flags;
@@ -50,25 +54,33 @@ namespace KeePass.Native
 			public IntPtr ExtraInfo;
 		}
 
-		[StructLayout(LayoutKind.Sequential)]
-		internal struct HARDWAREINPUT
-		{
-			public uint Message;
-			public ushort ParamL;
-			public ushort ParamH;
-		}
-
 		[StructLayout(LayoutKind.Explicit)]
-		internal struct INPUT
+		internal struct INPUT32
 		{
 			[FieldOffset(0)]
 			public uint Type;
-			[FieldOffset(4)]
-			public MOUSEINPUT MouseInput;
-			[FieldOffset(4)]
-			public KEYBDINPUT KeyboardInput;
-			[FieldOffset(4)]
-			public HARDWAREINPUT HardwareInput;
+			[FieldOffset(0)]
+			public MOUSEINPUT32_WithSkip MouseInput;
+			[FieldOffset(0)]
+			public KEYBDINPUT32_WithSkip KeyboardInput;
+		}
+
+		// INPUT.KI (40). vk: 8, sc: 10, fl: 12, t: 16, ex: 24
+		[StructLayout(LayoutKind.Explicit, Size = 40)]
+		internal struct SpecializedKeyboardINPUT64
+		{
+			[FieldOffset(0)]
+			public uint Type;
+			[FieldOffset(8)]
+			public ushort VirtualKeyCode;
+			[FieldOffset(10)]
+			public ushort ScanCode;
+			[FieldOffset(12)]
+			public uint Flags;
+			[FieldOffset(16)]
+			public uint Time;
+			[FieldOffset(24)]
+			public IntPtr ExtraInfo;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -135,6 +147,26 @@ namespace KeePass.Native
 			public Int32 Right;
 			public Int32 Top;
 			public Int32 Bottom;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		internal struct COPYDATASTRUCT
+		{
+			public IntPtr dwData;
+			public Int32 cbData;
+			public IntPtr lpData;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct SCROLLINFO
+		{
+			public uint cbSize;
+			public uint fMask;
+			public int nMin;
+			public int nMax;
+			public uint nPage;
+			public int nPos;
+			public int nTrackPos;
 		}
 	}
 }

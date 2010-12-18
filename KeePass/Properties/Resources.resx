@@ -472,4 +472,55 @@
   <data name="B16x16_Imp_RoboForm" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Images\B16x16_Imp_RoboForm.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="B16x16_Folder_Outbox" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B16x16_Folder_Outbox.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Imp_PwMem2008" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_Imp_PwMem2008.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Imp_PassKeeper" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_Imp_PassKeeper.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Make_KDevelop" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B16x16_Make_KDevelop.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B48x48_Make_KDevelop" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B48x48_Make_KDevelop.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Imp_OnePwPro" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_Imp_OnePwPro.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Imp_FlexWallet" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_Imp_FlexWallet.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_FontBold" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_FontBold.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_FontItalic" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_FontItalic.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_FontUnderline" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_FontUnderline.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_FontStrikeout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_FontStrikeout.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Colorize" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B16x16_Colorize.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Color_Fill" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B16x16_Color_Fill.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_TextAlignCenter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_TextAlignCenter.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_TextAlignLeft" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_TextAlignLeft.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_TextAlignRight" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Images\B16x16_TextAlignRight.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="B16x16_Redo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Nuvola\B16x16_Redo.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

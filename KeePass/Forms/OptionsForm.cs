@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -114,15 +114,33 @@ namespace KeePass.Forms
 			if(uTab < (uint)m_tabMain.TabPages.Count)
 				m_tabMain.SelectedTab = m_tabMain.TabPages[(int)uTab];
 
+			m_cmbBannerStyle.Items.Add("(" + KPRes.CurrentStyle + ")");
+			m_cmbBannerStyle.Items.Add("WinXP Login");
+			m_cmbBannerStyle.Items.Add("WinVista Black");
+			m_cmbBannerStyle.Items.Add("KeePass Win32");
+			m_cmbBannerStyle.Items.Add("Blue Carbon");
+
 			CreateDialogBanner(BannerStyle.Default);
 			m_cmbBannerStyle.SelectedIndex = (int)BannerStyle.Default;
 
 			int nWidth = m_lvPolicy.ClientRectangle.Width - 36;
-			m_lvPolicy.Columns.Add(KPRes.Flag, nWidth / 4);
+			m_lvPolicy.Columns.Add(KPRes.Feature, nWidth / 4);
 			m_lvPolicy.Columns.Add(KPRes.Description, (nWidth * 3) / 4);
 
 			m_hkGlobalAutoType = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys, m_tbGlobalAutoType);
 			m_hkShowWindow = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys, m_tbShowWindowHotKey);
+
+			if(NativeLib.IsUnix() == false)
+			{
+				UIUtil.SetShield(m_btnFileExtCreate, true);
+				UIUtil.SetShield(m_btnFileExtRemove, true);
+			}
+			else // Unix
+			{
+				m_hkGlobalAutoType.Enabled = m_hkShowWindow.Enabled = false;
+				m_btnFileExtCreate.Enabled = m_btnFileExtRemove.Enabled = false;
+				m_cbAutoRun.Enabled = false;
+			}
 
 			LoadOptions();
 
@@ -180,10 +198,16 @@ namespace KeePass.Forms
 				"LockOnSessionLock", m_lvSecurityOptions, lvg, KPRes.LockOnSessionLock);
 			m_cdxSecurityOptions.CreateItem(Program.Config.Security, "ClipboardClearOnExit",
 				m_lvSecurityOptions, lvg, KPRes.ClipboardClearOnExit);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
+				"ExitInsteadOfLockingAfterTime", m_lvSecurityOptions, lvg, KPRes.ExitInsteadOfLockingAfterTime);
 
 			if(NativeLib.IsLibraryInstalled())
 				m_cdxSecurityOptions.CreateItem(Program.Config.Native, "NativeKeyTransformations",
 					m_lvSecurityOptions, lvg, KPRes.NativeLibUse);
+
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security,
+				"UseClipboardViewerIgnoreFormat", m_lvSecurityOptions, lvg,
+				KPRes.ClipboardViewerIgnoreFormat + " " + KPRes.NotRecommended);
 
 			m_cdxSecurityOptions.UpdateData(false);
 			m_lvSecurityOptions.Columns[0].Width = m_lvSecurityOptions.ClientRectangle.Width - 36;
@@ -193,7 +217,7 @@ namespace KeePass.Forms
 			string strDisplayDesc)
 		{
 			ListViewItem lvi = m_cdxPolicy.CreateItem(Program.Config.Security.Policy,
-				strPropertyName, m_lvPolicy, null, strDisplayName);
+				strPropertyName, m_lvPolicy, null, strDisplayName + "*");
 			lvi.SubItems.Add(strDisplayDesc);
 		}
 
@@ -229,6 +253,12 @@ namespace KeePass.Forms
 				m_lvGuiOptions, lvg, KPRes.ShowFullPathInTitleBar);
 			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "MinimizeAfterClipboardCopy",
 				m_lvGuiOptions, lvg, KPRes.MinimizeAfterCopy);
+			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "MinimizeAfterLocking",
+				m_lvGuiOptions, lvg, KPRes.MinimizeAfterLocking);
+			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "MinimizeAfterOpeningDatabase",
+				m_lvGuiOptions, lvg, KPRes.MinimizeAfterOpeningDatabase);
+			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "QuickFindExcludeExpired",
+				m_lvGuiOptions, lvg, KPRes.QuickSearchExcludeExpired);
 			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "FocusResultsAfterQuickFind",
 				m_lvGuiOptions, lvg, KPRes.FocusResultsAfterQuickFind);
 
@@ -236,24 +266,31 @@ namespace KeePass.Forms
 			m_lvGuiOptions.Groups.Add(lvg);
 			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "ShowGridLines",
 				m_lvGuiOptions, lvg, KPRes.ShowGridLines);
+			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "EntryListAutoResizeColumns",
+				m_lvGuiOptions, lvg, KPRes.EntryListAutoResizeColumns);
+			m_cdxGuiOptions.CreateItem(Program.Config.MainWindow, "CopyUrlsInsteadOfOpening",
+				m_lvGuiOptions, lvg, KPRes.CopyUrlsInsteadOfOpening);
 
 			m_cdxGuiOptions.UpdateData(false);
 			m_lvGuiOptions.Columns[0].Width = m_lvGuiOptions.ClientRectangle.Width - 36;
+
+			try { m_numMruCount.Value = Program.Config.Application.MostRecentlyUsed.MaxItemCount; }
+			catch(Exception) { Debug.Assert(false); m_numMruCount.Value = AceMru.DefaultMaxItemCount; }
 		}
 
 		private void LoadIntegrationOptions()
 		{
 			Keys kAT = (Keys)Program.Config.Integration.HotKeyGlobalAutoType;
-			m_hkGlobalAutoType.HotKey = kAT & Keys.KeyCode;
-			m_hkGlobalAutoType.HotKeyModifiers = kAT & Keys.Modifiers;
+			m_hkGlobalAutoType.HotKey = (kAT & Keys.KeyCode);
+			m_hkGlobalAutoType.HotKeyModifiers = (kAT & Keys.Modifiers);
 			m_hkGlobalAutoType.RenderHotKey();
-			m_kPrevATHKKey = m_hkGlobalAutoType.HotKey | m_hkGlobalAutoType.HotKeyModifiers;
+			m_kPrevATHKKey = (m_hkGlobalAutoType.HotKey | m_hkGlobalAutoType.HotKeyModifiers);
 
 			Keys kSW = (Keys)Program.Config.Integration.HotKeyShowWindow;
-			m_hkShowWindow.HotKey = kSW & Keys.KeyCode;
-			m_hkShowWindow.HotKeyModifiers = kSW & Keys.Modifiers;
+			m_hkShowWindow.HotKey = (kSW & Keys.KeyCode);
+			m_hkShowWindow.HotKeyModifiers = (kSW & Keys.Modifiers);
 			m_hkShowWindow.RenderHotKey();
-			m_kPrevSWHKKey = m_hkShowWindow.HotKey | m_hkShowWindow.HotKeyModifiers;
+			m_kPrevSWHKKey = (m_hkShowWindow.HotKey | m_hkShowWindow.HotKeyModifiers);
 
 			m_cbAutoRun.Checked = ShellUtil.GetStartWithWindows(AppDefs.AutoRunName);
 			m_cbSingleClickTrayAction.Checked = Program.Config.UI.TrayIcon.SingleClickDefault;
@@ -270,7 +307,7 @@ namespace KeePass.Forms
 			ListViewGroup lvg = new ListViewGroup(KPRes.StartAndExit);
 			m_lvAdvanced.Groups.Add(lvg);
 			m_cdxAdvanced.CreateItem(Program.Config.Application.Start, "OpenLastFile",
-				m_lvAdvanced, lvg, KPRes.AutoOpenLastFile);
+				m_lvAdvanced, lvg, KPRes.AutoRememberOpenLastFile);
 			m_cdxAdvanced.CreateItem(Program.Config.Integration, "LimitToSingleInstance",
 				m_lvAdvanced, lvg, KPRes.LimitSingleInstance);
 			m_cdxAdvanced.CreateItem(Program.Config.Application.Start, "CheckForUpdate",
@@ -287,15 +324,45 @@ namespace KeePass.Forms
 			m_cdxAdvanced.CreateItem(Program.Config.Application.FileOpening, "ShowSoonToExpireEntries",
 				m_lvAdvanced, lvg, KPRes.AutoShowSoonToExpireEntries);
 
+			lvg = new ListViewGroup(KPRes.AutoType);
+			m_lvAdvanced.Groups.Add(lvg);
+			m_cdxAdvanced.CreateItem(Program.Config.Integration, "AutoTypePrependInitSequenceForIE",
+				m_lvAdvanced, lvg, KPRes.AutoTypePrependInitSeqForIE);
+			m_cdxAdvanced.CreateItem(Program.Config.Integration, "AutoTypeReleaseAltWithKeyPress",
+				m_lvAdvanced, lvg, KPRes.AutoTypeReleaseAltWithKeyPress);
+
 			lvg = new ListViewGroup(KPRes.Advanced);
 			m_lvAdvanced.Groups.Add(lvg);
 			m_cdxAdvanced.CreateItem(Program.Config.Integration, "SearchKeyFilesOnRemovableMedia",
 				m_lvAdvanced, lvg, KPRes.SearchKeyFilesOnRemovable);
+			m_cdxAdvanced.CreateItem(Program.Config.Defaults, "RememberKeyFilePaths",
+				m_lvAdvanced, lvg, KPRes.RememberKeyFilePaths);
 			m_cdxAdvanced.CreateItem(Program.Config.UI.Hiding, "SeparateHidingSettings",
 				m_lvAdvanced, lvg, KPRes.RememberHidingSettings);
+			m_cdxAdvanced.CreateItem(Program.Config.UI, "OptimizeForScreenReader",
+				m_lvAdvanced, lvg, KPRes.OptimizeForScreenReader);
 
 			m_cdxAdvanced.UpdateData(false);
 			m_lvAdvanced.Columns[0].Width = m_lvAdvanced.ClientRectangle.Width - 36;
+		}
+
+		private bool ValidateOptions()
+		{
+			bool bAltMod = false;
+			bAltMod |= ((m_hkGlobalAutoType.HotKeyModifiers == Keys.Alt) ||
+				(m_hkGlobalAutoType.HotKeyModifiers == (Keys.Alt | Keys.Shift)));
+			bAltMod |= ((m_hkShowWindow.HotKeyModifiers == Keys.Alt) ||
+				(m_hkShowWindow.HotKeyModifiers == (Keys.Alt | Keys.Shift)));
+
+			if(bAltMod)
+			{
+				if(!MessageService.AskYesNo(KPRes.HotKeyAltOnly + MessageService.NewParagraph +
+					KPRes.HotKeyAltOnlyHint + MessageService.NewParagraph +
+					KPRes.HotKeyAltOnlyQuestion, null, false))
+					return false;
+			}
+
+			return true;
 		}
 
 		private void SaveOptions()
@@ -327,10 +394,13 @@ namespace KeePass.Forms
 				Program.Config.UI.BannerStyle = (BannerStyle)
 					m_cmbBannerStyle.SelectedIndex;
 
+			Program.Config.Application.MostRecentlyUsed.MaxItemCount =
+				(uint)m_numMruCount.Value;
+
 			ChangeHotKey(ref m_kPrevATHKKey, m_hkGlobalAutoType, true,
-				AppDefs.GlobalHotKeyID.AutoType);
+				AppDefs.GlobalHotKeyId.AutoType);
 			ChangeHotKey(ref m_kPrevSWHKKey, m_hkShowWindow, false,
-				AppDefs.GlobalHotKeyID.ShowWindow);
+				AppDefs.GlobalHotKeyId.ShowWindow);
 
 			Program.Config.UI.TrayIcon.SingleClickDefault = m_cbSingleClickTrayAction.Checked;
 
@@ -351,7 +421,7 @@ namespace KeePass.Forms
 		private static void ChangeHotKey(ref Keys kPrevHK, HotKeyControlEx hkControl,
 			bool bAutoTypeHotKey, int nHotKeyID)
 		{
-			Keys kNew = hkControl.HotKey | hkControl.HotKeyModifiers;
+			Keys kNew = (hkControl.HotKey | hkControl.HotKeyModifiers);
 			if(kPrevHK != kNew)
 			{
 				kPrevHK = kNew;
@@ -383,8 +453,9 @@ namespace KeePass.Forms
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			SaveOptions();
+			if(!ValidateOptions()) { this.DialogResult = DialogResult.None; return; }
 
+			SaveOptions();
 			CleanUpEx();
 		}
 
@@ -430,13 +501,18 @@ namespace KeePass.Forms
 
 		private void OnBtnFileExtCreate(object sender, EventArgs e)
 		{
-			ShellUtil.RegisterExtension(AppDefs.FileExtension.FileExt, AppDefs.FileExtension.ExtID,
-				KPRes.FileExtName, WinUtil.GetExecutable(), PwDefs.ShortProductName, true);
+			// ShellUtil.RegisterExtension(AppDefs.FileExtension.FileExt, AppDefs.FileExtension.ExtId,
+			//	KPRes.FileExtName, WinUtil.GetExecutable(), PwDefs.ShortProductName, true);
+			WinUtil.RunElevated(WinUtil.GetExecutable(), "/" +
+				AppDefs.CommandLineOptions.FileExtRegister, false);
 		}
 
 		private void OnBtnFileExtRemove(object sender, EventArgs e)
 		{
-			ShellUtil.UnregisterExtension(AppDefs.FileExtension.FileExt, AppDefs.FileExtension.ExtID);
+			// ShellUtil.UnregisterExtension(AppDefs.FileExtension.FileExt,
+			//	AppDefs.FileExtension.ExtId);
+			WinUtil.RunElevated(WinUtil.GetExecutable(), "/" +
+				AppDefs.CommandLineOptions.FileExtUnregister, false);
 		}
 
 		private void OnCheckedChangedAutoRun(object sender, EventArgs e)
@@ -479,6 +555,13 @@ namespace KeePass.Forms
 		private void OnClipboardClearTimeCheckedChanged(object sender, EventArgs e)
 		{
 			UpdateUIState();
+		}
+
+		private void OnBtnTriggers(object sender, EventArgs e)
+		{
+			EcasTriggersForm f = new EcasTriggersForm();
+			f.InitEx(Program.TriggerSystem, m_ilIcons);
+			f.ShowDialog();
 		}
 	}
 }

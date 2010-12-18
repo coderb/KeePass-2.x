@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,16 +26,20 @@ using System.IO;
 using KeePass.Resources;
 
 using KeePassLib;
+using KeePassLib.Collections;
 using KeePassLib.Interfaces;
 using KeePassLib.Serialization;
 
 namespace KeePass.DataExchange.Formats
 {
-	internal sealed class KeePassXml2x : FormatImporter
+	internal sealed class KeePassXml2x : FileFormatProvider
 	{
+		public override bool SupportsImport { get { return true; } }
+		public override bool SupportsExport { get { return true; } }
+
 		public override string FormatName { get { return "KeePass XML (2.x)"; } }
 		public override string DefaultExtension { get { return "xml"; } }
-		public override string AppGroup { get { return PwDefs.ShortProductName; } }
+		public override string ApplicationGroup { get { return PwDefs.ShortProductName; } }
 
 		public override bool SupportsUuids { get { return true; } }
 
@@ -49,6 +53,27 @@ namespace KeePass.DataExchange.Formats
 		{
 			Kdb4File kdb4 = new Kdb4File(pwStorage);
 			kdb4.Load(sInput, Kdb4Format.PlainXml, slLogger);
+		}
+
+		public override bool Export(PwExportInfo pwExportInfo, Stream sOutput,
+			IStatusLogger slLogger)
+		{
+			PwDatabase pd = (pwExportInfo.ContextDatabase ?? new PwDatabase());
+
+			PwObjectList<PwDeletedObject> vDel = null;
+			if(pwExportInfo.ExportDeletedObjects == false)
+			{
+				vDel = pd.DeletedObjects.CloneShallow();
+				pd.DeletedObjects.Clear();
+			}
+
+			Kdb4File kdb = new Kdb4File(pd);
+			kdb.Save(sOutput, pwExportInfo.DataGroup, Kdb4Format.PlainXml, slLogger);
+
+			// Restore deleted objects list
+			if(vDel != null) pd.DeletedObjects.Add(vDel);
+
+			return true;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Diagnostics;
 
 using KeePassLib.Interfaces;
@@ -98,7 +99,7 @@ namespace KeePassLib.Collections
 		/// parameter is <c>null</c>.</exception>
 		public ProtectedBinary Get(string strName)
 		{
-			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException();
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
 
 			ProtectedBinary pb;
 			if(m_vBinaries.TryGetValue(strName, out pb))
@@ -116,8 +117,8 @@ namespace KeePassLib.Collections
 		/// parameters is <c>null</c>.</exception>
 		public void Set(string strField, ProtectedBinary pbNewValue)
 		{
-			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException();
-			Debug.Assert(pbNewValue != null); if(pbNewValue == null) throw new ArgumentNullException();
+			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException("strField");
+			Debug.Assert(pbNewValue != null); if(pbNewValue == null) throw new ArgumentNullException("pbNewValue");
 
 			m_vBinaries[strField] = pbNewValue;
 		}
@@ -132,9 +133,23 @@ namespace KeePassLib.Collections
 		/// is <c>null</c>.</exception>
 		public bool Remove(string strField)
 		{
-			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException();
+			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException("strField");
 
 			return m_vBinaries.Remove(strField);
+		}
+
+		public string KeysToString()
+		{
+			if(m_vBinaries.Count == 0) return string.Empty;
+
+			StringBuilder sb = new StringBuilder();
+			foreach(KeyValuePair<string, ProtectedBinary> kvp in m_vBinaries)
+			{
+				if(sb.Length > 0) sb.Append(", ");
+				sb.Append(kvp.Key);
+			}
+
+			return sb.ToString();
 		}
 	}
 }

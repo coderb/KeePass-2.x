@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ namespace KeePass.Forms
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_pgRoot != null); if(m_pgRoot == null) throw new ArgumentNullException();
+			Debug.Assert(m_pgRoot != null); if(m_pgRoot == null) throw new InvalidOperationException();
 
 			GlobalWindowManager.AddWindow(this, this);
 
@@ -105,15 +105,10 @@ namespace KeePass.Forms
 				(sc != StringComparison.OrdinalIgnoreCase));
 
 			m_cbRegEx.Checked = Program.Config.Defaults.SearchParameters.RegularExpression;
-
-			EnableUserControls();
+			m_cbExcludeExpired.Checked = Program.Config.Defaults.SearchParameters.ExcludeExpired;
 
 			this.ActiveControl = m_tbSearch;
 			m_tbSearch.Focus();
-		}
-
-		private void EnableUserControls()
-		{
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
@@ -139,7 +134,7 @@ namespace KeePass.Forms
 
 			PwObjectList<PwEntry> listResults = pgResults.Entries;
 
-			try { m_pgRoot.SearchEntries(sp, listResults); }
+			try { m_pgRoot.SearchEntries(sp, listResults, true); }
 			catch(Exception exFind) { MessageService.ShowWarning(exFind); }
 
 			m_pgResultsGroup = pgResults;
@@ -176,6 +171,8 @@ namespace KeePass.Forms
 			sp.ComparisonMode = (m_cbCaseSensitive.Checked ?
 				StringComparison.InvariantCulture :
 				StringComparison.InvariantCultureIgnoreCase);
+
+			sp.ExcludeExpired = m_cbExcludeExpired.Checked;
 
 			return sp;
 		}

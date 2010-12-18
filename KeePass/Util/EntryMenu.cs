@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ namespace KeePass.Util
 			ctx.ImageList = Program.MainForm.ClientIcons;
 
 			bool bAppendSeparator = false;
-			foreach(DocumentStateEx ds in Program.MainForm.DocumentManager.Documents)
+			foreach(PwDocument ds in Program.MainForm.DocumentManager.Documents)
 			{
 				if(ds.Database.IsOpen)
 				{
@@ -86,16 +86,16 @@ namespace KeePass.Util
 			return ctx;
 		}
 
-		private static ToolStripMenuItem MenuCreateGroup(DocumentStateEx ds,
+		private static ToolStripMenuItem MenuCreateGroup(PwDocument ds,
 			PwGroup pg)
 		{
 			ToolStripMenuItem tsmi = new ToolStripMenuItem();
 			tsmi.Text = pg.Name;
-			tsmi.ImageIndex = MenuGetImageIndex(ds, pg.IconID, pg.CustomIconUuid);
+			tsmi.ImageIndex = MenuGetImageIndex(ds, pg.IconId, pg.CustomIconUuid);
 			return tsmi;
 		}
 
-		private static int MenuGetImageIndex(DocumentStateEx ds, PwIcon pwID,
+		private static int MenuGetImageIndex(PwDocument ds, PwIcon pwID,
 			PwUuid pwCustomID)
 		{
 			if((pwCustomID != PwUuid.Zero) && (ds ==
@@ -111,8 +111,8 @@ namespace KeePass.Util
 			return (int)PwIcon.Key;
 		}
 
-		private static void MenuAddEntry(DocumentStateEx ds,
-			ToolStripMenuItem tsmiContainer, PwEntry pe)
+		private static void MenuAddEntry(PwDocument ds, ToolStripMenuItem tsmiContainer,
+			PwEntry pe)
 		{
 			ToolStripMenuItem tsmiEntry = new ToolStripMenuItem();
 			string strTitle = pe.Strings.ReadSafe(PwDefs.TitleField);
@@ -123,7 +123,7 @@ namespace KeePass.Util
 			else if(strTitle.Length > 0) strText = strTitle;
 			else if(strUser.Length > 0) strText = strUser;
 			tsmiEntry.Text = strText;
-			tsmiEntry.ImageIndex = MenuGetImageIndex(ds, pe.IconID, pe.CustomIconUuid);
+			tsmiEntry.ImageIndex = MenuGetImageIndex(ds, pe.IconId, pe.CustomIconUuid);
 			tsmiContainer.DropDownItems.Add(tsmiEntry);
 
 			ToolStripMenuItem tsmi;
@@ -132,7 +132,7 @@ namespace KeePass.Util
 			tsmi.ImageIndex = (int)PwIcon.Run;
 			tsmi.Tag = pe;
 			tsmi.Click += OnAutoType;
-			tsmi.Enabled = pe.AutoType.Enabled;
+			tsmi.Enabled = pe.GetAutoTypeEnabled();
 			tsmiEntry.DropDownItems.Add(tsmi);
 
 			tsmiEntry.DropDownItems.Add(new ToolStripSeparator());
@@ -150,7 +150,7 @@ namespace KeePass.Util
 			tsmiEntry.DropDownItems.Add(tsmi);
 		}
 
-		private static void MenuProcessGroup(DocumentStateEx ds,
+		private static void MenuProcessGroup(PwDocument ds,
 			ToolStripMenuItem tsmiContainer, PwGroup pgSource)
 		{
 			if((pgSource.Groups.UCount == 0) && (pgSource.Entries.UCount == 0))
@@ -188,7 +188,8 @@ namespace KeePass.Util
 			PwEntry pe = tsmi.Tag as PwEntry;
 			Debug.Assert(pe != null); if(pe == null) return;
 
-			ClipboardUtil.Copy(pe.Strings.ReadSafe(strField), true);
+			ClipboardUtil.Copy(pe.Strings.ReadSafe(strField), true,
+				pe, Program.MainForm.DocumentManager.ActiveDatabase);
 		}
 
 		private static void OnCopyUserName(object sender, EventArgs e)

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -146,8 +146,11 @@ namespace KeePass.UI
 				return true;
 			}
 
-			if (keyData == (Keys.Shift | Keys.Insert)) // Paste command
+			if(keyData == (Keys.Shift | Keys.Insert)) // Paste command
 				return true; // Not allowed
+
+			if((keyData & Keys.KeyCode) == Keys.F12)
+				return true; // Reserved for debugger, see MSDN
 
 			return base.ProcessCmdKey(ref msg, keyData);
 		}
@@ -169,7 +172,7 @@ namespace KeePass.UI
 
 			if((m_kHotKey == Keys.LWin) || (m_kHotKey == Keys.RWin))
 			{
-				this.Text = KPRes.None;
+				ResetHotKey();
 				return;
 			}
 
@@ -219,12 +222,12 @@ namespace KeePass.UI
 				m_kHotKey = Keys.None;
 			}
 
-			this.Text = this.m_kModifiers.ToString() + " + " + m_kHotKey.ToString();
+			this.Text = m_kModifiers.ToString() + " + " + m_kHotKey.ToString();
 		}
 
 		public static HotKeyControlEx ReplaceTextBox(Control cContainer, TextBox tb)
 		{
-			Debug.Assert(tb != null); if(tb == null) throw new ArgumentNullException();
+			Debug.Assert(tb != null); if(tb == null) throw new ArgumentNullException("tb");
 			tb.Enabled = false;
 			tb.Visible = false;
 			cContainer.Controls.Remove(tb);

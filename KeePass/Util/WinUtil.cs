@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,24 +26,29 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
+using System.Security.Cryptography;
 
 using KeePass.App;
 using KeePass.Native;
 using KeePass.Resources;
+using KeePass.Util.Spr;
 
 using KeePassLib;
+using KeePassLib.Serialization;
 using KeePassLib.Utility;
 
 namespace KeePass.Util
 {
 	public static class WinUtil
 	{
+		private const int ERROR_ACCESS_DENIED = 5;
+
 		private static bool m_bIsWindows9x = false;
 		private static bool m_bIsWindows2000 = false;
 		private static bool m_bIsWindowsXP = false;
 		private static bool m_bIsAtLeastWindowsVista = false;
 
-		private const int ERROR_ACCESS_DENIED = 5;
+		private static string m_strExePath = null;
 
 		public static bool IsWindows9x
 		{
@@ -101,28 +106,27 @@ namespace KeePass.Util
 			string strPrevWorkDir = Directory.GetCurrentDirectory();
 			string strThisExe = WinUtil.GetExecutable();
 			
-			string strExeDir = UrlUtil.GetFileDirectory(strThisExe, false);
+			string strExeDir = UrlUtil.GetFileDirectory(strThisExe, false, true);
 			try { Directory.SetCurrentDirectory(strExeDir); }
 			catch(Exception) { Debug.Assert(false); }
 
 			string strUrl = strUrlToOpen;
-			bool bCmdQuotes = strUrl.StartsWith("cmd://");
-
 			strUrl = strUrl.TrimStart(new char[]{ ' ', '\t', '\r', '\n' });
 
 			PwDatabase pwDatabase = null;
 			try { pwDatabase = Program.MainForm.PluginHost.Database; }
 			catch(Exception) { Debug.Assert(false); pwDatabase = null; }
 
-			strUrl = StrUtil.FillPlaceholders(strUrl, peDataSource, strThisExe,
-				pwDatabase, bCmdQuotes, false, 0);
-			strUrl = AppLocator.FillPlaceholders(strUrl, false);
-			strUrl = EntryUtil.FillPlaceholders(strUrl, peDataSource, false);
+			bool bCmdQuotes = WinUtil.IsCommandLineUrl(strUrl);
 
-			if(strUrl.StartsWith("cmd://"))
+			strUrl = SprEngine.Compile(strUrl, false, peDataSource, pwDatabase,
+				false, bCmdQuotes);
+
+			if(WinUtil.IsCommandLineUrl(strUrl))
 			{
 				string strApp, strArgs;
-				StrUtil.SplitCommandLine(strUrl.Remove(0, 6), out strApp, out strArgs);
+				StrUtil.SplitCommandLine(WinUtil.GetCommandLineFromUrl(strUrl),
+					out strApp, out strArgs);
 
 				try
 				{
@@ -196,22 +200,21 @@ namespace KeePass.Util
 
 		public static string GetExecutable()
 		{
-			string strExePath = null;
+			if(m_strExePath != null) return m_strExePath;
 
-			try { strExePath = Assembly.GetExecutingAssembly().Location; }
+			try { m_strExePath = Assembly.GetExecutingAssembly().Location; }
 			catch(Exception) { }
 
-			if((strExePath == null) || (strExePath.Length == 0))
+			if((m_strExePath == null) || (m_strExePath.Length == 0))
 			{
-				strExePath = Assembly.GetExecutingAssembly().GetName().CodeBase;
-				strExePath = UrlUtil.FileUrlToPath(strExePath);
+				m_strExePath = Assembly.GetExecutingAssembly().GetName().CodeBase;
+				m_strExePath = UrlUtil.FileUrlToPath(m_strExePath);
 			}
 
-			return strExePath;
+			return m_strExePath;
 		}
 
-		/*
-		private const string FontPartsSeparator = @"/:/";
+		/* private const string FontPartsSeparator = @"/:/";
 		
 		public static Font FontIDToFont(string strFontID)
 		{
@@ -252,8 +255,7 @@ namespace KeePass.Util
 			sb.Append(f.Strikeout ? "1" : "0");
 
 			return sb.ToString();
-		}
-		*/
+		} */
 
 		/// <summary>
 		/// Shorten a path.
@@ -373,6 +375,101 @@ namespace KeePass.Util
 			catch(Exception) { Debug.Assert(false); }
 
 			return string.Empty;
+		}
+
+		private static readonly string[] m_vIE7Windows = new string[] {
+			"Windows Internet Explorer", "Maxthon"
+		};
+
+		public static bool IsInternetExplorer7Window(string strWindowTitle)
+		{
+			if(strWindowTitle == null) return false; // No assert or throw
+			if(strWindowTitle.Length == 0) return false; // No assert or throw
+
+			foreach(string str in m_vIE7Windows)
+			{
+				if(strWindowTitle.IndexOf(str) >= 0) return true;
+			}
+
+			return false;
+		}
+
+		public static byte[] HashFile(IOConnectionInfo iocFile)
+		{
+			if(iocFile == null) { Debug.Assert(false); return null; } // Assert only
+
+			Stream sIn;
+			try
+			{
+				sIn = IOConnection.OpenRead(iocFile);
+				if(sIn == null) throw new FileNotFoundException();
+			}
+			catch(Exception) { return null; }
+
+			byte[] pbHash;
+			try
+			{
+				SHA256Managed sha256 = new SHA256Managed();
+				pbHash = sha256.ComputeHash(sIn);
+			}
+			catch(Exception) { Debug.Assert(false); sIn.Close(); return null; }
+
+			sIn.Close();
+			return pbHash;
+		}
+
+		// See GetCommandLineFromUrl when editing this method
+		public static bool IsCommandLineUrl(string strUrl)
+		{
+			if(strUrl == null) { Debug.Assert(false); return false; }
+
+			string strLower = strUrl.ToLower();
+
+			if(strLower.StartsWith("cmd://")) return true;
+			if(strLower.StartsWith("\\\\")) return true; // UNC path support
+
+			return false;
+		}
+
+		// See IsCommandLineUrl when editing this method
+		public static string GetCommandLineFromUrl(string strUrl)
+		{
+			if(strUrl == null) { Debug.Assert(false); return string.Empty; }
+
+			string strLower = strUrl.ToLower();
+
+			if(strLower.StartsWith("cmd://")) return strUrl.Remove(0, 6);
+			if(strLower.StartsWith("\\\\")) return strUrl; // UNC path support
+
+			return strUrl;
+		}
+
+		public static bool RunElevated(string strExe, string strArgs,
+			bool bShowMessageIfFailed)
+		{
+			if(strExe == null) throw new ArgumentNullException("strExe");
+
+			try
+			{
+				ProcessStartInfo psi = new ProcessStartInfo();
+				if(strArgs != null) psi.Arguments = strArgs;
+				psi.FileName = strExe;
+				psi.UseShellExecute = true;
+				psi.WindowStyle = ProcessWindowStyle.Normal;
+
+				// Elevate on Windows Vista and higher
+				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "runas";
+
+				Process.Start(psi);
+			}
+			catch(Exception ex)
+			{
+				if(bShowMessageIfFailed) MessageService.ShowWarning(ex);
+
+				return false;
+			}
+
+			return true;
 		}
 	}
 }

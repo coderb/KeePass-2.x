@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,29 +29,34 @@ namespace KeePass.UI
 	public sealed class DynamicMenuEventArgs : EventArgs
 	{
 		private string m_strItemName = string.Empty;
+		private object m_objTag = null;
 
 		public string ItemName
 		{
 			get { return m_strItemName; }
 		}
 
-		public DynamicMenuEventArgs(string strItemName)
+		public object Tag
+		{
+			get { return m_objTag; }
+		}
+
+		public DynamicMenuEventArgs(string strItemName, object objTag)
 		{
 			Debug.Assert(strItemName != null);
 			if(strItemName == null) throw new ArgumentNullException("strItemName");
 
 			m_strItemName = strItemName;
+			m_objTag = objTag;
 		}
 	}
-
-	public delegate void DynamicMenuEventHandler(object sender, DynamicMenuEventArgs e);
 
 	public sealed class DynamicMenu
 	{
 		private ToolStripMenuItem m_tsmiHost;
 		private List<ToolStripItem> m_vMenuItems = new List<ToolStripItem>();
 
-		public event DynamicMenuEventHandler MenuClick;
+		public event EventHandler<DynamicMenuEventArgs> MenuClick;
 
 		public DynamicMenu(ToolStripMenuItem tsmiHost)
 		{
@@ -80,11 +85,17 @@ namespace KeePass.UI
 
 		public void AddItem(string strItemText, Image imgSmallIcon)
 		{
+			AddItem(strItemText, imgSmallIcon, null);
+		}
+
+		public void AddItem(string strItemText, Image imgSmallIcon, object objTag)
+		{
 			Debug.Assert(strItemText != null);
 			if(strItemText == null) throw new ArgumentNullException("strItemText");
 
 			ToolStripMenuItem tsmi = new ToolStripMenuItem(strItemText);
 			tsmi.Click += this.OnMenuClick;
+			tsmi.Tag = objTag;
 
 			if(imgSmallIcon != null) tsmi.Image = imgSmallIcon;
 
@@ -102,13 +113,13 @@ namespace KeePass.UI
 
 		private void OnMenuClick(object sender, EventArgs e)
 		{
-			ToolStripItem tsi = sender as ToolStripItem;
+			ToolStripItem tsi = (sender as ToolStripItem);
 			Debug.Assert(tsi != null); if(tsi == null) return;
 
 			string strText = tsi.Text;
 			Debug.Assert(strText != null); if(strText == null) return;
 
-			DynamicMenuEventArgs args = new DynamicMenuEventArgs(strText);
+			DynamicMenuEventArgs args = new DynamicMenuEventArgs(strText, tsi.Tag);
 			if(this.MenuClick != null) this.MenuClick(sender, args);
 		}
 	}

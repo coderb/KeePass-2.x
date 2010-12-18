@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,36 +21,64 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 using KeePass.App;
 using KeePass.Resources;
+using KeePass.UI;
 
 using KeePassLib;
 using KeePassLib.Keys;
 using KeePassLib.Utility;
+using KeePassLib.Serialization;
 
 namespace KeePass.Util
 {
 	public static class KeyUtil
 	{
-		public static CompositeKey KeyFromCommandLine()
+		public static CompositeKey KeyFromCommandLine(CommandLineArgs args)
 		{
-			CompositeKey cmpKey = new CompositeKey();
+			if(args == null) throw new ArgumentNullException("args");
 
-			string strPassword = Program.CommandLineArgs[AppDefs.CommandLineOptions.Password];
-			string strKeyFile = Program.CommandLineArgs[AppDefs.CommandLineOptions.KeyFile];
-			string strUserAcc = Program.CommandLineArgs[AppDefs.CommandLineOptions.UserAccount];
+			CompositeKey cmpKey = new CompositeKey();
+			string strPassword = args[AppDefs.CommandLineOptions.Password];
+			string strKeyFile = args[AppDefs.CommandLineOptions.KeyFile];
+			string strUserAcc = args[AppDefs.CommandLineOptions.UserAccount];
 
 			if(strPassword != null)
 				cmpKey.AddUserKey(new KcpPassword(strPassword));
 			
 			if(strKeyFile != null)
 			{
-				try { cmpKey.AddUserKey(new KcpKeyFile(strKeyFile)); }
-				catch(Exception exKey)
+				if(Program.KeyProviderPool.IsKeyProvider(strKeyFile))
 				{
-					MessageService.ShowWarning(strKeyFile, KPRes.KeyFileError, exKey);
-					return null;
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(
+						args.FileName, false);
+
+					bool bPerformHash;
+					byte[] pbProvKey = Program.KeyProviderPool.GetKey(strKeyFile, ctxKP,
+						out bPerformHash);
+					if((pbProvKey != null) && (pbProvKey.Length > 0))
+					{
+						try { cmpKey.AddUserKey(new KcpCustomKey(strKeyFile, pbProvKey, bPerformHash)); }
+						catch(Exception exCKP)
+						{
+							MessageService.ShowWarning(exCKP);
+							return null;
+						}
+
+						Array.Clear(pbProvKey, 0, pbProvKey.Length);
+					}
+					else return null; // Provider has shown error message
+				}
+				else // Key file
+				{
+					try { cmpKey.AddUserKey(new KcpKeyFile(strKeyFile)); }
+					catch(Exception exKey)
+					{
+						MessageService.ShowWarning(strKeyFile, KPRes.KeyFileError, exKey);
+						return null;
+					}
 				}
 			}
 			

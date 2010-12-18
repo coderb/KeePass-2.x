@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,25 +51,36 @@ namespace KeePassLib.Serialization
 	/// </summary>
 	public sealed partial class Kdb4File
 	{
-		public void Save(string strFile, Kdb4Format format, IStatusLogger slLogger)
+		public void Save(string strFile, PwGroup pgDataSource, Kdb4Format format,
+			IStatusLogger slLogger)
 		{
-			IOConnectionInfo ioc = IOConnectionInfo.FromPath(strFile);
-			this.Save(IOConnection.OpenWrite(ioc), format, slLogger);
-		}
+			bool bMadeUnhidden = UrlUtil.UnhideFile(strFile);
 
+			IOConnectionInfo ioc = IOConnectionInfo.FromPath(strFile);
+			this.Save(IOConnection.OpenWrite(ioc), pgDataSource, format, slLogger);
+
+			if(bMadeUnhidden) UrlUtil.HideFile(strFile, true); // Hide again
+		}
+	
 		/// <summary>
 		/// Save the contents of the current <c>PwDatabase</c> to a KDB file.
 		/// </summary>
 		/// <param name="sSaveTo">Stream to write the KDB file into.</param>
+		/// <param name="pgDataSource">Group containing all groups and
+		/// entries to write. If <c>null</c>, the complete database will
+		/// be written.</param>
 		/// <param name="format">Format of the file to create.</param>
 		/// <param name="slLogger">Logger that recieves status information.</param>
-		public void Save(Stream sSaveTo, Kdb4Format format, IStatusLogger slLogger)
+		public void Save(Stream sSaveTo, PwGroup pgDataSource, Kdb4Format format,
+			IStatusLogger slLogger)
 		{
 			Debug.Assert(sSaveTo != null);
 			if(sSaveTo == null) throw new ArgumentNullException("sSaveTo");
 
 			m_format = format;
 			m_slLogger = slLogger;
+
+			HashingStreamEx hashedStream = new HashingStreamEx(sSaveTo, true, null);
 
 			UTF8Encoding encNoBom = new UTF8Encoding(false, false);
 			CryptoRandom cr = CryptoRandom.Instance;
@@ -81,7 +92,9 @@ namespace KeePassLib.Serialization
 				m_pbEncryptionIV = cr.GetRandomBytes(16);
 
 				m_pbProtectedStreamKey = cr.GetRandomBytes(32);
-				m_randomStream = new CryptoRandomStream(CrsAlgorithm.ArcFour, m_pbProtectedStreamKey);
+				m_craInnerRandomStream = CrsAlgorithm.Salsa20;
+				m_randomStream = new CryptoRandomStream(m_craInnerRandomStream,
+					m_pbProtectedStreamKey);
 
 				m_pbStreamStartBytes = cr.GetRandomBytes(32);
 
@@ -89,11 +102,11 @@ namespace KeePassLib.Serialization
 				BinaryWriter bw = null;
 				if(m_format == Kdb4Format.Default)
 				{
-					bw = new BinaryWriter(sSaveTo, encNoBom);
-					WriteHeader(bw);
+					bw = new BinaryWriter(hashedStream, encNoBom);
+					WriteHeader(bw); // Also flushes bw
 
-					Stream sEncrypted = AttachStreamEncryptor(sSaveTo);
-					if((sEncrypted == null) || (sEncrypted == sSaveTo))
+					Stream sEncrypted = AttachStreamEncryptor(hashedStream);
+					if((sEncrypted == null) || (sEncrypted == hashedStream))
 						throw new SecurityException(KLRes.CryptoStreamFailed);
 
 					sEncrypted.Write(m_pbStreamStartBytes, 0, m_pbStreamStartBytes.Length);
@@ -106,11 +119,11 @@ namespace KeePassLib.Serialization
 						writerStream = sHashed;
 				}
 				else if(m_format == Kdb4Format.PlainXml)
-					writerStream = sSaveTo;
+					writerStream = hashedStream;
 				else { Debug.Assert(false); throw new FormatException("KdbFormat"); }
 
 				m_xmlWriter = new XmlTextWriter(writerStream, Encoding.UTF8);
-				WriteDocument();
+				WriteDocument(pgDataSource);
 
 				m_xmlWriter.Flush();
 				m_xmlWriter.Close();
@@ -118,23 +131,29 @@ namespace KeePassLib.Serialization
 
 				GC.KeepAlive(bw);
 
-				sSaveTo.Close();
-
-				m_xmlWriter = null;
+				CommonCleanUpWrite(sSaveTo, hashedStream);
 			}
 			catch(Exception)
 			{
-				sSaveTo.Close();
-				m_xmlWriter = null;
-
+				CommonCleanUpWrite(sSaveTo, hashedStream);
 				throw;
 			}
+		}
+
+		private void CommonCleanUpWrite(Stream sSaveTo, HashingStreamEx hashedStream)
+		{
+			hashedStream.Close();
+			m_pbHashOfFileOnDisk = hashedStream.Hash;
+
+			sSaveTo.Close();
+
+			m_xmlWriter = null;
 		}
 
 		private void WriteHeader(BinaryWriter bw)
 		{
 			Debug.Assert(bw != null);
-			if(bw == null) throw new ArgumentNullException("br");
+			if(bw == null) throw new ArgumentNullException("bw");
 
 			bw.Write(MemUtil.UInt32ToBytes(FileSignature1));
 			bw.Write(MemUtil.UInt32ToBytes(FileSignature2));
@@ -149,10 +168,12 @@ namespace KeePassLib.Serialization
 			WriteHeaderField(bw, Kdb4HeaderFieldID.MasterSeed, m_pbMasterSeed);
 			WriteHeaderField(bw, Kdb4HeaderFieldID.TransformSeed, m_pbTransformSeed);
 			WriteHeaderField(bw, Kdb4HeaderFieldID.TransformRounds, MemUtil.UInt64ToBytes(m_pwDatabase.KeyEncryptionRounds));
-
 			WriteHeaderField(bw, Kdb4HeaderFieldID.EncryptionIV, m_pbEncryptionIV);
 			WriteHeaderField(bw, Kdb4HeaderFieldID.ProtectedStreamKey, m_pbProtectedStreamKey);
 			WriteHeaderField(bw, Kdb4HeaderFieldID.StreamStartBytes, m_pbStreamStartBytes);
+
+			uint uIrsID = (uint)m_craInnerRandomStream;
+			WriteHeaderField(bw, Kdb4HeaderFieldID.InnerRandomStreamID, MemUtil.UInt32ToBytes(uIrsID));
 
 			WriteHeaderField(bw, Kdb4HeaderFieldID.EndOfHeader, new byte[]{ (byte)'\r', (byte)'\n', (byte)'\r', (byte)'\n' });
 			bw.Flush();
@@ -208,13 +229,15 @@ namespace KeePassLib.Serialization
 			return iEngine.EncryptStream(s, aesKey, this.m_pbEncryptionIV);
 		}
 
-		private void WriteDocument()
+		private void WriteDocument(PwGroup pgDataSource)
 		{
 			Debug.Assert(m_xmlWriter != null);
 			if(m_xmlWriter == null) throw new InvalidOperationException();
 
+			PwGroup pgRoot = (pgDataSource ?? m_pwDatabase.RootGroup);
+
 			uint uNumGroups, uNumEntries, uCurEntry = 0;
-			m_pwDatabase.RootGroup.GetCounts(true, out uNumGroups, out uNumEntries);
+			pgRoot.GetCounts(true, out uNumGroups, out uNumEntries);
 
 			m_xmlWriter.Formatting = Formatting.Indented;
 			m_xmlWriter.IndentChar = '\t';
@@ -226,10 +249,10 @@ namespace KeePassLib.Serialization
 			WriteMeta();
 
 			m_xmlWriter.WriteStartElement(ElemRoot);
-			StartGroup(m_pwDatabase.RootGroup);
+			StartGroup(pgRoot);
 
 			Stack<PwGroup> groupStack = new Stack<PwGroup>();
-			groupStack.Push(m_pwDatabase.RootGroup);
+			groupStack.Push(pgRoot);
 
 			GroupHandler gh = delegate(PwGroup pg)
 			{
@@ -269,7 +292,7 @@ namespace KeePassLib.Serialization
 				return true;
 			};
 
-			if(!m_pwDatabase.RootGroup.TraverseTree(TraversalMethod.PreOrder, gh, eh))
+			if(!pgRoot.TraverseTree(TraversalMethod.PreOrder, gh, eh))
 				throw new InvalidOperationException();
 
 			while(groupStack.Count > 1)
@@ -301,8 +324,14 @@ namespace KeePassLib.Serialization
 
 			WriteCustomIconList();
 
+			WriteObject(ElemRecycleBinEnabled, m_pwDatabase.RecycleBinEnabled);
+			WriteObject(ElemRecycleBinUuid, m_pwDatabase.RecycleBinUuid);
+			WriteObject(ElemEntryTemplatesGroup, m_pwDatabase.EntryTemplatesGroup);
+
 			WriteObject(ElemLastSelectedGroup, m_pwDatabase.LastSelectedGroup);
 			WriteObject(ElemLastTopVisibleGroup, m_pwDatabase.LastTopVisibleGroup);
+
+			WriteList(ElemCustomData, m_pwDatabase.CustomData);
 
 			m_xmlWriter.WriteEndElement();
 		}
@@ -312,7 +341,8 @@ namespace KeePassLib.Serialization
 			m_xmlWriter.WriteStartElement(ElemGroup);
 			WriteObject(ElemUuid, pg.Uuid);
 			WriteObject(ElemName, pg.Name, true);
-			WriteObject(ElemIcon, (uint)pg.IconID);
+			WriteObject(ElemNotes, pg.Notes, true);
+			WriteObject(ElemIcon, (uint)pg.IconId);
 			
 			if(pg.CustomIconUuid != PwUuid.Zero)
 				WriteObject(ElemCustomIconID, pg.CustomIconUuid);
@@ -320,6 +350,8 @@ namespace KeePassLib.Serialization
 			WriteList(ElemTimes, pg);
 			WriteObject(ElemIsExpanded, pg.IsExpanded);
 			WriteObject(ElemGroupDefaultAutoTypeSeq, pg.DefaultAutoTypeSequence, true);
+			WriteObject(ElemEnableAutoType, StrUtil.BoolToStringEx(pg.EnableAutoType), false);
+			WriteObject(ElemEnableSearching, StrUtil.BoolToStringEx(pg.EnableSearching), false);
 			WriteObject(ElemLastTopVisibleEntry, pg.LastTopVisibleEntry);
 		}
 
@@ -330,12 +362,12 @@ namespace KeePassLib.Serialization
 
 		private void WriteEntry(PwEntry pe, bool bIsHistory)
 		{
-			Debug.Assert(pe != null); if(pe == null) throw new ArgumentNullException();
+			Debug.Assert(pe != null); if(pe == null) throw new ArgumentNullException("pe");
 
 			m_xmlWriter.WriteStartElement(ElemEntry);
 
 			WriteObject(ElemUuid, pe.Uuid);
-			WriteObject(ElemIcon, (uint)pe.IconID);
+			WriteObject(ElemIcon, (uint)pe.IconId);
 			
 			if(pe.CustomIconUuid != PwUuid.Zero)
 				WriteObject(ElemCustomIconID, pe.CustomIconUuid);
@@ -389,7 +421,7 @@ namespace KeePassLib.Serialization
 				WriteObject(ElemAutoTypeDefaultSeq, dictAutoType.DefaultSequence, true);
 
 			foreach(KeyValuePair<string, string> kvp in dictAutoType.WindowSequencePairs)
-				WriteObject(kvp);
+				WriteObject(ElemAutoTypeItem, ElemWindow, ElemKeystrokeSequence, kvp);
 
 			m_xmlWriter.WriteEndElement();
 		}
@@ -397,7 +429,7 @@ namespace KeePassLib.Serialization
 		private void WriteList(string name, ITimeLogger times)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(times != null); if(times == null) throw new ArgumentNullException();
+			Debug.Assert(times != null); if(times == null) throw new ArgumentNullException("times");
 
 			m_xmlWriter.WriteStartElement(name);
 
@@ -411,27 +443,27 @@ namespace KeePassLib.Serialization
 			m_xmlWriter.WriteEndElement(); // Name
 		}
 
-		private void WriteList(string name, PwObjectList<PwEntry> entryList, bool bIsHistory)
+		private void WriteList(string name, PwObjectList<PwEntry> value, bool bIsHistory)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(entryList != null); if(entryList == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			m_xmlWriter.WriteStartElement(name);
 
-			foreach(PwEntry pe in entryList)
+			foreach(PwEntry pe in value)
 				WriteEntry(pe, bIsHistory);
 
 			m_xmlWriter.WriteEndElement();
 		}
 
-		private void WriteList(string name, PwObjectList<PwDeletedObject> deletedList)
+		private void WriteList(string name, PwObjectList<PwDeletedObject> value)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(deletedList != null); if(deletedList == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			m_xmlWriter.WriteStartElement(name);
 
-			foreach(PwDeletedObject pdo in deletedList)
+			foreach(PwDeletedObject pdo in value)
 				WriteObject(ElemDeletedObject, pdo);
 
 			m_xmlWriter.WriteEndElement();
@@ -450,6 +482,19 @@ namespace KeePassLib.Serialization
 			WriteObject(ElemProtURL, value.ProtectUrl);
 			WriteObject(ElemProtNotes, value.ProtectNotes);
 			WriteObject(ElemProtAutoHide, value.AutoEnableVisualHiding);
+
+			m_xmlWriter.WriteEndElement();
+		}
+
+		private void WriteList(string name, StringDictionaryEx value)
+		{
+			Debug.Assert(name != null);
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
+
+			m_xmlWriter.WriteStartElement(name);
+
+			foreach(KeyValuePair<string, string> kvp in value)
+				WriteObject(ElemStringDictExItem, ElemKey, ElemValue, kvp);
 
 			m_xmlWriter.WriteEndElement();
 		}
@@ -500,7 +545,7 @@ namespace KeePassLib.Serialization
 		private void WriteObject(string name, PwUuid value)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			WriteObject(name, Convert.ToBase64String(value.UuidBytes), false);
 		}
@@ -527,27 +572,28 @@ namespace KeePassLib.Serialization
 		{
 			Debug.Assert(name != null);
 
-			WriteObject(name, value.ToString("s"), false);
+			WriteObject(name, TimeUtil.SerializeUtc(value), false);
 		}
 
-		private void WriteObject(KeyValuePair<string, string> kvp)
+		private void WriteObject(string name, string strKeyName,
+			string strValueName, KeyValuePair<string, string> kvp)
 		{
-			m_xmlWriter.WriteStartElement(ElemAutoTypeItem);
+			m_xmlWriter.WriteStartElement(name);
 
-			m_xmlWriter.WriteStartElement(ElemWindow);
+			m_xmlWriter.WriteStartElement(strKeyName);
 			m_xmlWriter.WriteString(StrUtil.SafeXmlString(kvp.Key));
 			m_xmlWriter.WriteEndElement();
-			m_xmlWriter.WriteStartElement(ElemKeystrokeSequence);
+			m_xmlWriter.WriteStartElement(strValueName);
 			m_xmlWriter.WriteString(StrUtil.SafeXmlString(kvp.Value));
 			m_xmlWriter.WriteEndElement();
 
-			m_xmlWriter.WriteEndElement(); // ElemKeyValuePair
+			m_xmlWriter.WriteEndElement();
 		}
 
 		private void WriteObject(string name, ProtectedString value, bool bIsEntryString)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			m_xmlWriter.WriteStartElement(ElemString);
 			m_xmlWriter.WriteStartElement(ElemKey);
@@ -628,7 +674,7 @@ namespace KeePassLib.Serialization
 		private void WriteObject(string name, ProtectedBinary value)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			m_xmlWriter.WriteStartElement(ElemBinary);
 			m_xmlWriter.WriteStartElement(ElemKey);
@@ -657,7 +703,7 @@ namespace KeePassLib.Serialization
 		private void WriteObject(string name, PwDeletedObject value)
 		{
 			Debug.Assert(name != null);
-			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+			Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 			m_xmlWriter.WriteStartElement(name);
 			WriteObject(ElemUuid, value.Uuid);

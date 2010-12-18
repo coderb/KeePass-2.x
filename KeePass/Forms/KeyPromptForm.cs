@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -52,8 +52,8 @@ namespace KeePass.Forms
 
 		private bool m_bInitializing = false;
 
-		private List<string> m_vSuggestions = new List<string>();
-		private bool m_bSuggestionsReady = false;
+		private volatile List<string> m_vSuggestions = new List<string>();
+		private volatile bool m_bSuggestionsReady = false;
 
 		public CompositeKey CompositeKey
 		{
@@ -97,6 +97,9 @@ namespace KeePass.Forms
 				Properties.Resources.B48x48_KGPG_Key2, KPRes.EnterCompositeKey,
 				strBannerDesc);
 			this.Icon = Properties.Resources.KeePass;
+
+			m_ttRect.SetToolTip(m_cbHidePassword, KPRes.TogglePasswordAsterisks);
+			m_ttRect.SetToolTip(m_btnOpenKeyFile, KPRes.KeyFileSelect);
 
 			string strNameEx = UrlUtil.GetFileName(m_strFilePath);
 			if(strNameEx.Length > 0) this.Text += " - " + strNameEx;
@@ -149,16 +152,26 @@ namespace KeePass.Forms
 			if(WinUtil.IsWindows9x || NativeLib.IsUnix())
 				m_cbUserAccount.Enabled = false;
 
+			CustomizeForScreenReader();
 			EnableUserControls();
 
 			m_bInitializing = false;
 
+			// Local, but thread will continue to run anyway
 			Thread th = new Thread(new ThreadStart(this.AsyncFormLoad));
 			th.Start();
 
 			this.BringToFront();
 			this.Activate();
 			m_tbPassword.Focus();
+		}
+
+		private void CustomizeForScreenReader()
+		{
+			if(!Program.Config.UI.OptimizeForScreenReader) return;
+
+			m_cbHidePassword.Text = KPRes.HideUsingAsterisks;
+			m_btnOpenKeyFile.Text = KPRes.SelectFile;
 		}
 
 		private void CleanUpEx()
@@ -184,35 +197,36 @@ namespace KeePass.Forms
 			if(m_cbKeyFile.Checked && (!strKeyFile.Equals(KPRes.NoKeyFileSpecifiedMeta)) &&
 				(bIsProvKey == false))
 			{
-				if(ValidateKeyFileLocation() == false)
-				{
-					m_pKey = null;
-					return false;
-				}
+				if(ValidateKeyFileLocation() == false) return false;
 
 				try { m_pKey.AddUserKey(new KcpKeyFile(strKeyFile)); }
-				catch(Exception exKF)
+				catch(Exception)
 				{
-					MessageService.ShowWarning(strKeyFile, KPRes.KeyFileError, exKF);
-					m_pKey = null;
+					MessageService.ShowWarning(strKeyFile, KPRes.KeyFileError);
 					return false;
 				}
 			}
 			else if(m_cbKeyFile.Checked && (!strKeyFile.Equals(KPRes.NoKeyFileSpecifiedMeta)) &&
 				(bIsProvKey == true))
 			{
-				byte[] pbProvKey = Program.KeyProviderPool.GetKey(strKeyFile);
+				KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(
+					m_strFilePath, false);
 
-				try { m_pKey.AddUserKey(new KcpCustomKey(pbProvKey)); }
-				catch(Exception exCKP)
-				{
-					MessageService.ShowWarning(strKeyFile, KPRes.KeyFileError, exCKP);
-					m_pKey = null;
-					return false;
-				}
-
+				bool bPerformHash;
+				byte[] pbProvKey = Program.KeyProviderPool.GetKey(strKeyFile, ctxKP,
+					out bPerformHash);
 				if((pbProvKey != null) && (pbProvKey.Length > 0))
+				{
+					try { m_pKey.AddUserKey(new KcpCustomKey(strKeyFile, pbProvKey, bPerformHash)); }
+					catch(Exception exCKP)
+					{
+						MessageService.ShowWarning(exCKP);
+						return false;
+					}
+
 					Array.Clear(pbProvKey, 0, pbProvKey.Length);
+				}
+				else return false; // Provider has shown error message
 			}
 
 			if(m_cbUserAccount.Checked)
@@ -262,6 +276,21 @@ namespace KeePass.Forms
 			if(m_cbKeyFile.Checked && strKeyFile.Equals(KPRes.NoKeyFileSpecifiedMeta))
 				m_btnOK.Enabled = false;
 			else m_btnOK.Enabled = true;
+
+			bool bExclusiveProv = false;
+			KeyProvider prov = Program.KeyProviderPool.Get(strKeyFile);
+			if(prov != null) bExclusiveProv = prov.Exclusive;
+
+			if(bExclusiveProv)
+			{
+				m_tbPassword.Text = string.Empty;
+				UIUtil.SetChecked(m_cbPassword, false);
+				UIUtil.SetChecked(m_cbUserAccount, false);
+			}
+			UIUtil.SetEnabled(m_cbPassword, !bExclusiveProv);
+			UIUtil.SetEnabled(m_tbPassword, !bExclusiveProv);
+			UIUtil.SetEnabled(m_cbHidePassword, !bExclusiveProv);
+			UIUtil.SetEnabled(m_cbUserAccount, !bExclusiveProv);
 		}
 
 		private void OnCheckedPassword(object sender, EventArgs e)
@@ -297,6 +326,7 @@ namespace KeePass.Forms
 
 		private void OnBtnCancel(object sender, EventArgs e)
 		{
+			m_pKey = null;
 			CleanUpEx();
 		}
 
@@ -307,13 +337,15 @@ namespace KeePass.Forms
 
 		private void OnClickKeyFileBrowse(object sender, EventArgs e)
 		{
-			m_openKeyFileDialog.InitialDirectory = UrlUtil.GetFileDirectory(m_strFilePath, false);
+			string strFilter = UIUtil.CreateFileTypeFilter("key", KPRes.KeyFiles, true);
+			OpenFileDialog ofd = UIUtil.CreateOpenFileDialog(KPRes.KeyFileSelect,
+				strFilter, 2, null, false, true);
 
-			if(m_openKeyFileDialog.ShowDialog() == DialogResult.OK)
+			if(ofd.ShowDialog() == DialogResult.OK)
 			{
 				m_cbKeyFile.Checked = true;
 
-				m_cmbKeyFile.Items.Add(m_openKeyFileDialog.FileName);
+				m_cmbKeyFile.Items.Add(ofd.FileName);
 				m_cmbKeyFile.SelectedIndex = m_cmbKeyFile.Items.Count - 1;
 			}
 
@@ -332,12 +364,14 @@ namespace KeePass.Forms
 					m_cbKeyFile.Checked = true;
 			}
 			else m_cbKeyFile.Checked = false;
+
+			EnableUserControls();
 		}
 
 		private void AsyncFormLoad()
 		{
-			try { this.PopulateKeyFileSuggestions(); }
-			catch(Exception) { }
+			try { PopulateKeyFileSuggestions(); }
+			catch(Exception) { Debug.Assert(false); }
 		}
 
 		private void PopulateKeyFileSuggestions()
@@ -368,9 +402,7 @@ namespace KeePass.Forms
 			}
 
 			foreach(KeyProvider prov in Program.KeyProviderPool)
-			{
 				m_vSuggestions.Add(prov.Name);
-			}
 
 			m_bSuggestionsReady = true;
 		}
@@ -386,6 +418,16 @@ namespace KeePass.Forms
 					m_cmbKeyFile.Items.Add(str);
 
 				m_vSuggestions.Clear();
+
+				if(m_cmbKeyFile.SelectedIndex == 0)
+				{
+					string strRemKey = Program.Config.Defaults.GetKeyFilePath(m_strFilePath);
+					if(!string.IsNullOrEmpty(strRemKey))
+					{
+						m_cmbKeyFile.Items.Add(strRemKey);
+						m_cmbKeyFile.SelectedIndex = m_cmbKeyFile.Items.Count - 1;
+					}
+				}
 			}
 		}
 

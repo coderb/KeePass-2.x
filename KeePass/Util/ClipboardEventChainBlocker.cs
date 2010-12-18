@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ using KeePass.Native;
 
 namespace KeePass.Util
 {
-	public sealed class ClipboardEventChainBlocker : IDisposable
+	public sealed class ClipboardEventChainBlocker
 	{
 		private ClipboardBlockerForm m_form;
 		private IntPtr m_hChain;
@@ -46,10 +46,10 @@ namespace KeePass.Util
 
 		~ClipboardEventChainBlocker()
 		{
-			this.Dispose();
+			Release();
 		}
 
-		public void Dispose()
+		public void Release()
 		{
 			if(m_form != null)
 			{

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using KeePass.Native;
 using KeePass.Resources;
 
 using KeePassLib;
@@ -34,7 +35,7 @@ namespace KeePass.Util
 {
 	public static class ShellUtil
 	{
-		public static void RegisterExtension(string strFileExt, string strExtID,
+		public static void RegisterExtension(string strFileExt, string strExtId,
 			string strFullExtName, string strAppPath, string strAppName,
 			bool bShowSuccessMessage)
 		{
@@ -46,11 +47,11 @@ namespace KeePass.Util
 				catch(Exception) { }
 				RegistryKey kFileExt = kClassesRoot.OpenSubKey("." + strFileExt, true);
 
-				kFileExt.SetValue(string.Empty, strExtID, RegistryValueKind.String);
+				kFileExt.SetValue(string.Empty, strExtId, RegistryValueKind.String);
 
-				try { kClassesRoot.CreateSubKey(strExtID); }
+				try { kClassesRoot.CreateSubKey(strExtId); }
 				catch(Exception) { }
-				RegistryKey kExtInfo = kClassesRoot.OpenSubKey(strExtID, true);
+				RegistryKey kExtInfo = kClassesRoot.OpenSubKey(strExtId, true);
 
 				kExtInfo.SetValue(string.Empty, strFullExtName, RegistryValueKind.String);
 
@@ -71,7 +72,7 @@ namespace KeePass.Util
 				catch(Exception) { }
 				RegistryKey kShellOpen = kShell.OpenSubKey("open", true);
 
-				kShellOpen.SetValue(string.Empty, "&Open with " + strAppName, RegistryValueKind.String);
+				kShellOpen.SetValue(string.Empty, @"&Open with " + strAppName, RegistryValueKind.String);
 
 				try { kShellOpen.CreateSubKey("command"); }
 				catch(Exception) { }
@@ -79,30 +80,45 @@ namespace KeePass.Util
 
 				kShellCommand.SetValue(string.Empty, "\"" + strAppPath + "\" \"%1\"", RegistryValueKind.String);
 
+				ShChangeNotify();
+
 				if(bShowSuccessMessage)
 					MessageService.ShowInfo(KPRes.FileExtInstallSuccess);
 			}
-			catch(Exception exReg)
+			catch(Exception)
 			{
-				MessageService.ShowWarning(KPRes.FileExtInstallFailed, exReg);
+				MessageService.ShowWarning(KPRes.FileExtInstallFailed);
 			}
 		}
 
-		public static void UnregisterExtension(string strFileExt, string strExtID)
+		public static void UnregisterExtension(string strFileExt, string strExtId)
 		{
 			try
 			{
 				RegistryKey kClassesRoot = Registry.ClassesRoot;
 
 				kClassesRoot.DeleteSubKeyTree("." + strFileExt);
-				kClassesRoot.DeleteSubKeyTree(strExtID);
+				kClassesRoot.DeleteSubKeyTree(strExtId);
+
+				ShChangeNotify();
 			}
 			catch(Exception) { }
 		}
 
+		private static void ShChangeNotify()
+		{
+			try
+			{
+				NativeMethods.SHChangeNotify(NativeMethods.SHCNE_ASSOCCHANGED,
+					NativeMethods.SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
+			}
+			catch(Exception) { Debug.Assert(false); }
+		}
+
 		private const string AutoRunKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 
-		public static void SetStartWithWindows(string strAppName, string strAppPath, bool bAutoStart)
+		public static void SetStartWithWindows(string strAppName, string strAppPath,
+			bool bAutoStart)
 		{
 			try
 			{

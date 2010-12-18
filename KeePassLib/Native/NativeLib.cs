@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -105,39 +105,31 @@ namespace KeePassLib.Native
 		/// <summary>
 		/// Benchmark key transformation.
 		/// </summary>
-		/// <param name="pBuf256">Source and destination buffer.</param>
-		/// <param name="pKey256">Key to use in the transformation.</param>
+		/// <param name="uTimeMs">Number of seconds to perform the benchmark.</param>
 		/// <param name="puRounds">Number of transformations done.</param>
-		/// <param name="uSeconds">Number of seconds to perform the benchmark.</param>
 		/// <returns>Returns <c>true</c>, if the benchmark was successful.</returns>
-		public static bool TransformKey256Timed(byte[] pBuf256, byte[] pKey256,
-			ref ulong puRounds, uint uSeconds)
+		public static bool TransformKeyBenchmark256(uint uTimeMs, out ulong puRounds)
 		{
+			puRounds = 0;
+
 			if(m_bAllowNative == false) return false;
 
-			KeyValuePair<IntPtr, IntPtr> kvp = PrepareArrays256(pBuf256, pKey256);
-			bool bResult = false;
+			try { puRounds = NativeMethods.TransformKeyBenchmark(uTimeMs); }
+			catch(Exception) { return false; }
 
-			try
-			{
-				bResult = NativeMethods.TransformKeyTimed(kvp.Key, kvp.Value, ref puRounds, uSeconds);
-			}
-			catch(Exception) { bResult = false; }
-
-			if(bResult) GetBuffers256(kvp, pBuf256, pKey256);
-
-			NativeLib.FreeArrays(kvp);
-			return bResult;
+			return true;
 		}
 
 		private static KeyValuePair<IntPtr, IntPtr> PrepareArrays256(byte[] pBuf256,
 			byte[] pKey256)
 		{
 			Debug.Assert((pBuf256 != null) && (pBuf256.Length == 32));
-			if((pBuf256 == null) || (pBuf256.Length != 32)) throw new ArgumentNullException();
+			if(pBuf256 == null) throw new ArgumentNullException("pBuf256");
+			if(pBuf256.Length != 32) throw new ArgumentException();
 
 			Debug.Assert((pKey256 != null) && (pKey256.Length == 32));
-			if((pKey256 == null) || (pKey256.Length != 32)) throw new ArgumentNullException();
+			if(pKey256 == null) throw new ArgumentNullException("pKey256");
+			if(pKey256.Length != 32) throw new ArgumentException();
 
 			IntPtr hBuf = Marshal.AllocHGlobal(pBuf256.Length);
 			Marshal.Copy(pBuf256, 0, hBuf, pBuf256.Length);

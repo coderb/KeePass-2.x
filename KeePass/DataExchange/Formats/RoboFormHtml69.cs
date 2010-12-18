@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,13 +33,16 @@ using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
-	internal sealed class RoboFormHtml69 : FormatImporter
+	internal sealed class RoboFormHtml69 : FileFormatProvider
 	{
+		public override bool SupportsImport { get { return true; } }
+		public override bool SupportsExport { get { return false; } }
+
 		public override string FormatName { get { return "RoboForm HTML 6.9.82 (PassCards)"; } }
 		public override string DefaultExtension { get { return "html"; } }
-		public override string AppGroup { get { return KPRes.PasswordManagers; } }
+		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
 
-		public override bool AppendsToRootGroupOnly { get { return false; } }
+		public override bool ImportAppendsToRootGroupOnly { get { return false; } }
 
 		public override Image SmallIcon
 		{
@@ -63,7 +66,7 @@ namespace KeePass.DataExchange.Formats
 			int nOffset = 0;
 			while(true)
 			{
-				PwEntry pe = new PwEntry(null, true, true);
+				PwEntry pe = new PwEntry(true, true);
 
 				int nTitleTD = strData.IndexOf(m_strTitleTD, nOffset);
 				if(nTitleTD < 0) break;
@@ -86,8 +89,7 @@ namespace KeePass.DataExchange.Formats
 				pe.Strings.Set(PwDefs.TitleField, new ProtectedString(
 					pwStorage.MemoryProtection.ProtectTitle, strTitle));
 
-				pe.ParentGroup = pg;
-				pg.Entries.Add(pe);
+				pg.AddEntry(pe, true);
 
 				int nNextTitleTD = strData.IndexOf(m_strTitleTD, nOffset);
 				if(nNextTitleTD < 0) nNextTitleTD = strData.Length + 1;

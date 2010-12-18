@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,8 +25,13 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 
 using KeePass.App;
+using KeePass.Ecas;
+using KeePass.Util;
+using KeePass.Util.Spr;
 
 using KeePassLib;
+using KeePassLib.Native;
+using KeePassLib.Utility;
 
 namespace KeePass.Util
 {
@@ -37,26 +42,33 @@ namespace KeePass.Util
 
 		private const string ClipboardIgnoreFormatName = "Clipboard Viewer Ignore";
 
-		public static bool Copy(string strToCopy, bool bIsEntryInfo)
+		public static bool Copy(string strToCopy, bool bIsEntryInfo,
+			PwEntry peEntryInfo, PwDatabase pwReferenceSource)
 		{
 			Debug.Assert(strToCopy != null);
 			if(strToCopy == null) throw new ArgumentNullException("strToCopy");
 
-			if(bIsEntryInfo && !AppPolicy.Try(AppPolicyID.CopyToClipboard))
+			if(bIsEntryInfo && !AppPolicy.Try(AppPolicyId.CopyToClipboard))
 				return false;
+
+			string strData = SprEngine.Compile(strToCopy, false, peEntryInfo,
+				pwReferenceSource, false, false);
 
 			try
 			{
 				Clipboard.Clear();
 
-				DataObject doData = CreateProtectedDataObject(strToCopy);
+				DataObject doData = CreateProtectedDataObject(strData);
 				Clipboard.SetDataObject(doData);
 
 				m_pbDataHash32 = HashClipboard();
 				m_strFormat = null;
+
+				RaiseCopyEvent(bIsEntryInfo, strData);
 			}
 			catch(Exception) { Debug.Assert(false); return false; }
 
+			if(peEntryInfo != null) peEntryInfo.Touch(false);
 			return true;
 		}
 
@@ -65,7 +77,7 @@ namespace KeePass.Util
 			Debug.Assert(pbToCopy != null);
 			if(pbToCopy == null) throw new ArgumentNullException("pbToCopy");
 
-			if(bIsEntryInfo && !AppPolicy.Try(AppPolicyID.CopyToClipboard))
+			if(bIsEntryInfo && !AppPolicy.Try(AppPolicyId.CopyToClipboard))
 				return false;
 
 			try
@@ -79,6 +91,8 @@ namespace KeePass.Util
 
 				SHA256Managed sha256 = new SHA256Managed();
 				m_pbDataHash32 = sha256.ComputeHash(pbToCopy);
+
+				RaiseCopyEvent(bIsEntryInfo, string.Empty);
 			}
 			catch(Exception) { Debug.Assert(false); return false; }
 
@@ -86,9 +100,9 @@ namespace KeePass.Util
 		}
 
 		public static bool CopyAndMinimize(string strToCopy, bool bIsEntryInfo,
-			Form formToMinimize)
+			Form formToMinimize, PwEntry peEntryInfo, PwDatabase pwReferenceSource)
 		{
-			if(ClipboardUtil.Copy(strToCopy, bIsEntryInfo))
+			if(ClipboardUtil.Copy(strToCopy, bIsEntryInfo, peEntryInfo, pwReferenceSource))
 			{
 				if(formToMinimize != null)
 					formToMinimize.WindowState = FormWindowState.Minimized;
@@ -97,6 +111,13 @@ namespace KeePass.Util
 			}
 
 			return false;
+		}
+
+		private static void RaiseCopyEvent(bool bIsEntryInfo, string strDesc)
+		{
+			if(bIsEntryInfo == false) return;
+
+			Program.TriggerSystem.RaiseEvent(EcasEventIDs.CopiedEntryInfo, strDesc);
 		}
 
 		public static void ClearIfOwner()
@@ -109,12 +130,8 @@ namespace KeePass.Util
 			if(pbHash == null) return; // Unknown data (i.e. no KeePass data)
 			if(pbHash.Length != 32) { Debug.Assert(false); return; }
 
-			for(int i = 0; i < m_pbDataHash32.Length; ++i)
-			{
-				if(m_pbDataHash32[i] != pbHash[i])
-					return; // No KeePass data
-			}
-
+			if(!MemUtil.ArraysEqual(m_pbDataHash32, pbHash)) return;
+			
 			m_pbDataHash32 = null;
 			m_strFormat = null;
 
@@ -178,9 +195,13 @@ namespace KeePass.Util
 		{
 			Debug.Assert(doData != null); if(doData == null) return;
 
-			string strName = PwDefs.ProductName;
+			if(!Program.Config.Security.UseClipboardViewerIgnoreFormat) return;
+			if(NativeLib.IsUnix()) return;
 
-			try { doData.SetData(ClipboardIgnoreFormatName, false, strName); }
+			try
+			{
+				doData.SetData(ClipboardIgnoreFormatName, false, PwDefs.ProductName);
+			}
 			catch(Exception) { Debug.Assert(false); }
 		}
 	}

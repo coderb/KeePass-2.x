@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ namespace KeePass.Forms
 
 		private bool m_bBlockCancel = false;
 
-		public uint ChosenIconID
+		public uint ChosenIconId
 		{
 			get { return m_uChosenImageID; }
 		}
@@ -221,16 +221,8 @@ namespace KeePass.Forms
 			AddFileType(sbFilter, "*.wmf", "Windows Metafile (*.wmf)");
 			sbFilter.Append(@"|" + KPRes.AllFiles + @" (*.*)|*.*");
 
-			OpenFileDialog ofd = new OpenFileDialog();
-			ofd.AddExtension = false;
-			ofd.CheckFileExists = true;
-			ofd.CheckPathExists = true;
-			ofd.Filter = sbFilter.ToString();
-			ofd.FilterIndex = 1;
-			ofd.Multiselect = true;
-			ofd.RestoreDirectory = true;
-			ofd.SupportMultiDottedExtensions = true;
-			ofd.Title = KPRes.ImportFileTitle;
+			OpenFileDialog ofd = UIUtil.CreateOpenFileDialog(KPRes.ImportFileTitle,
+				sbFilter.ToString(), 1, null, true, true);
 
 			if(ofd.ShowDialog() == DialogResult.OK)
 			{
@@ -249,9 +241,12 @@ namespace KeePass.Forms
 						// Bitmap img = new Bitmap(strFile);
 						// Image img = Image.FromFile(strFile);
 						byte[] pb = File.ReadAllBytes(strFile);
-						MemoryStream msSource = new MemoryStream(pb, false);
-						Image img = Image.FromStream(msSource);
-						msSource.Close();
+						
+						// MemoryStream msSource = new MemoryStream(pb, false);
+						// Image img = Image.FromStream(msSource);
+						// msSource.Close();
+
+						Image img = UIUtil.LoadImage(pb);
 
 						Image imgNew = new Bitmap(img, new Size(16, 16));
 

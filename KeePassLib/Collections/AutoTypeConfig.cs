@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ namespace KeePassLib.Collections
 			get { return m_strWindow; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 				m_strWindow = value;
 			}
@@ -53,7 +53,7 @@ namespace KeePassLib.Collections
 			get { return m_strSequence; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 				m_strSequence = value;
 			}
@@ -100,7 +100,7 @@ namespace KeePassLib.Collections
 			get { return m_strDefaultSequence; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 				m_strDefaultSequence = value;
 			}
 		}
@@ -136,9 +136,9 @@ namespace KeePassLib.Collections
 		{
 			AutoTypeConfig newDic = new AutoTypeConfig();
 
-			newDic.m_bEnabled = this.m_bEnabled;
-			newDic.m_atooObfuscation = this.m_atooObfuscation;
-			newDic.m_strDefaultSequence = this.m_strDefaultSequence;
+			newDic.m_bEnabled = m_bEnabled;
+			newDic.m_atooObfuscation = m_atooObfuscation;
+			newDic.m_strDefaultSequence = m_strDefaultSequence;
 
 			foreach(KeyValuePair<string, string> kvp in m_vWindowSeqPairs)
 				newDic.Set(kvp.Key, kvp.Value);
@@ -156,8 +156,8 @@ namespace KeePassLib.Collections
 		/// parameters is <c>null</c>.</exception>
 		public void Set(string strWindow, string strKeystrokeSequence)
 		{
-			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException();
-			Debug.Assert(strKeystrokeSequence != null); if(strKeystrokeSequence == null) throw new ArgumentNullException();
+			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException("strWindow");
+			Debug.Assert(strKeystrokeSequence != null); if(strKeystrokeSequence == null) throw new ArgumentNullException("strKeystrokeSequence");
 
 			m_vWindowSeqPairs[strWindow] = strKeystrokeSequence;
 		}
@@ -174,7 +174,7 @@ namespace KeePassLib.Collections
 		/// parameter is <c>null</c>.</exception>
 		public string Get(string strWindow)
 		{
-			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException();
+			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException("strWindow");
 
 			string str;
 			if(m_vWindowSeqPairs.TryGetValue(strWindow, out str))
@@ -195,7 +195,7 @@ namespace KeePassLib.Collections
 		/// parameter is <c>null</c>.</exception>
 		public string GetSafe(string strWindow)
 		{
-			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException();
+			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException("strWindow");
 
 			string str;
 			if(m_vWindowSeqPairs.TryGetValue(strWindow, out str))
@@ -211,7 +211,7 @@ namespace KeePassLib.Collections
 		/// <returns>Returns <c>true</c> if the entry has been removed.</returns>
 		public bool Remove(string strWindow)
 		{
-			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException();
+			Debug.Assert(strWindow != null); if(strWindow == null) throw new ArgumentNullException("strWindow");
 
 			return m_vWindowSeqPairs.Remove(strWindow);
 		}

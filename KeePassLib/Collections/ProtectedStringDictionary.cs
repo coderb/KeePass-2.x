@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -100,11 +100,10 @@ namespace KeePassLib.Collections
 		/// is <c>null</c>.</exception>
 		public ProtectedString Get(string strName)
 		{
-			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException();
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
 
 			ProtectedString ps;
-			if(m_vStrings.TryGetValue(strName, out ps))
-				return ps;
+			if(m_vStrings.TryGetValue(strName, out ps)) return ps;
 
 			return null;
 		}
@@ -121,11 +120,10 @@ namespace KeePassLib.Collections
 		/// parameter is <c>null</c>.</exception>
 		public ProtectedString GetSafe(string strName)
 		{
-			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException();
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
 
 			ProtectedString ps;
-			if(m_vStrings.TryGetValue(strName, out ps))
-				return ps;
+			if(m_vStrings.TryGetValue(strName, out ps)) return ps;
 
 			return new ProtectedString();
 		}
@@ -185,7 +183,7 @@ namespace KeePassLib.Collections
 				else return ps.ReadString();
 			}
 
-			return "";
+			return string.Empty;
 		}
 
 		/// <summary>
@@ -197,8 +195,8 @@ namespace KeePassLib.Collections
 		/// parameters is <c>null</c>.</exception>
 		public void Set(string strField, ProtectedString psNewValue)
 		{
-			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException();
-			Debug.Assert(psNewValue != null); if(psNewValue == null) throw new ArgumentNullException();
+			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException("strField");
+			Debug.Assert(psNewValue != null); if(psNewValue == null) throw new ArgumentNullException("psNewValue");
 
 			m_vStrings[strField] = psNewValue;
 		}
@@ -209,11 +207,11 @@ namespace KeePassLib.Collections
 		/// <param name="strField">Name of the string field to delete.</param>
 		/// <returns>Returns <c>true</c> if the field has been successfully
 		/// removed, otherwise the return value is <c>false</c>.</returns>
-		/// <exception cref="System.ArgumentNullException">Thrown if one of the input
-		/// parameters is <c>null</c>.</exception>
+		/// <exception cref="System.ArgumentNullException">Thrown if the input
+		/// parameter is <c>null</c>.</exception>
 		public bool Remove(string strField)
 		{
-			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException();
+			Debug.Assert(strField != null); if(strField == null) throw new ArgumentNullException("strField");
 
 			return m_vStrings.Remove(strField);
 		}

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{10938016-DEE2-4A25-9A5A-8FD3444379CA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -39,11 +39,11 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
@@ -62,11 +62,17 @@
     <Compile Include="..\KeePassLib\Collections\PwObjectList.cs">
       <Link>KeePassLib\Collections\PwObjectList.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Collections\StringDictionaryEx.cs">
+      <Link>KeePassLib\Collections\StringDictionaryEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\CipherPool.cs">
       <Link>KeePassLib\Cryptography\Cipher\CipherPool.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\ICipherEngine.cs">
       <Link>KeePassLib\Cryptography\Cipher\ICipherEngine.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\Cipher\Salsa20Cipher.cs">
+      <Link>KeePassLib\Cryptography\Cipher\Salsa20Cipher.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\StandardAesEngine.cs">
       <Link>KeePassLib\Cryptography\Cipher\StandardAesEngine.cs</Link>
@@ -77,8 +83,17 @@
     <Compile Include="..\KeePassLib\Cryptography\CryptoRandomStream.cs">
       <Link>KeePassLib\Cryptography\CryptoRandomStream.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\HashingStreamEx.cs">
+      <Link>KeePassLib\Cryptography\HashingStreamEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CharSetBasedGenerator.cs">
       <Link>KeePassLib\Cryptography\PasswordGenerator\CharSetBasedGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CustomPwGenerator.cs">
+      <Link>KeePassLib\Cryptography\PasswordGenerator\CustomPwGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CustomPwGeneratorPool.cs">
+      <Link>KeePassLib\Cryptography\PasswordGenerator\CustomPwGeneratorPool.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\PatternBasedGenerator.cs">
       <Link>KeePassLib\Cryptography\PasswordGenerator\PatternBasedGenerator.cs</Link>
@@ -137,6 +152,12 @@
     <Compile Include="..\KeePassLib\Keys\KeyProviderPool.cs">
       <Link>KeePassLib\Keys\KeyProviderPool.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Keys\KeyValidator.cs">
+      <Link>KeePassLib\Keys\KeyValidator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Keys\KeyValidatorPool.cs">
+      <Link>KeePassLib\Keys\KeyValidatorPool.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Keys\UserKeyType.cs">
       <Link>KeePassLib\Keys\UserKeyType.cs</Link>
     </Compile>
@@ -173,6 +194,9 @@
     <Compile Include="..\KeePassLib\Resources\KLRes.Generated.cs">
       <Link>KeePassLib\Resources\KLRes.Generated.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Resources\KSRes.Generated.cs">
+      <Link>KeePassLib\Resources\KSRes.Generated.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Security\ProtectedBinary.cs">
       <Link>KeePassLib\Security\ProtectedBinary.cs</Link>
     </Compile>
@@ -182,11 +206,15 @@
     <Compile Include="..\KeePassLib\Security\XorredBuffer.cs">
       <Link>KeePassLib\Security\XorredBuffer.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Serialization\BinaryReaderEx.cs">
+      <Link>KeePassLib\Serialization\BinaryReaderEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Serialization\HashedBlockStream.cs">
       <Link>KeePassLib\Serialization\HashedBlockStream.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Serialization\IOConnection.cs">
       <Link>KeePassLib\Serialization\IOConnection.cs</Link>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="..\KeePassLib\Serialization\IOConnectionInfo.cs">
       <Link>KeePassLib\Serialization\IOConnectionInfo.cs</Link>
@@ -249,6 +277,7 @@
     <Compile Include="App\AppHelp.cs" />
     <Compile Include="App\AppPolicy.cs" />
     <Compile Include="App\Configuration\AceApplication.cs" />
+    <Compile Include="App\Configuration\AceCustomConfig.cs" />
     <Compile Include="App\Configuration\AceDefaults.cs" />
     <Compile Include="App\Configuration\AceIntegration.cs" />
     <Compile Include="App\Configuration\AceLogging.cs" />
@@ -261,34 +290,53 @@
     <Compile Include="App\Configuration\AceUI.cs" />
     <Compile Include="App\Configuration\AppConfigEx.cs" />
     <Compile Include="App\Configuration\AppConfigSerializer.cs" />
-    <Compile Include="DataExchange\FormatImporter.cs" />
+    <Compile Include="DataExchange\ExportUtil.cs" />
+    <Compile Include="DataExchange\FileFormatProvider.cs" />
     <Compile Include="DataExchange\Formats\AmpXml250.cs" />
     <Compile Include="DataExchange\Formats\AnyPwCsv144.cs" />
     <Compile Include="DataExchange\Formats\CodeWalletTxt605.cs" />
+    <Compile Include="DataExchange\Formats\FlexWalletXml17.cs" />
     <Compile Include="DataExchange\Formats\GenericCsv.cs" />
     <Compile Include="DataExchange\Formats\KeePassCsv1x.cs" />
+    <Compile Include="DataExchange\Formats\KeePassHtml2x.cs" />
     <Compile Include="DataExchange\Formats\KeePassKdb1x.cs" />
     <Compile Include="DataExchange\Formats\KeePassKdb2x.cs" />
+    <Compile Include="DataExchange\Formats\KeePassXml1x.cs" />
     <Compile Include="DataExchange\Formats\KeePassXml2x.cs" />
     <Compile Include="DataExchange\Formats\MozillaBookmarksHtml100.cs" />
+    <Compile Include="DataExchange\Formats\MozillaBookmarksJson100.cs" />
+    <Compile Include="DataExchange\Formats\OnePwProCsv599.cs" />
+    <Compile Include="DataExchange\Formats\PassKeeper12.cs" />
     <Compile Include="DataExchange\Formats\PinsTxt450.cs" />
+    <Compile Include="DataExchange\Formats\PpKeeperHtml270.cs" />
     <Compile Include="DataExchange\Formats\PVaultTxt14.cs" />
     <Compile Include="DataExchange\Formats\PwAgentXml234.cs" />
     <Compile Include="DataExchange\Formats\PwDepotXml26.cs" />
     <Compile Include="DataExchange\Formats\PwExporterXml105.cs" />
     <Compile Include="DataExchange\Formats\PwGorillaCsv142.cs" />
+    <Compile Include="DataExchange\Formats\PwKeeperCsv70.cs" />
+    <Compile Include="DataExchange\Formats\PwMemory2008Xml104.cs" />
     <Compile Include="DataExchange\Formats\PwSafeXml302.cs" />
-    <Compile Include="DataExchange\Formats\PwTresor100.cs" />
+    <Compile Include="DataExchange\Formats\PwTresorXml100.cs" />
     <Compile Include="DataExchange\Formats\RoboFormHtml69.cs" />
     <Compile Include="DataExchange\Formats\SecurityTxt12.cs" />
     <Compile Include="DataExchange\Formats\Spamex20070328.cs" />
     <Compile Include="DataExchange\Formats\SplashIdCsv402.cs" />
     <Compile Include="DataExchange\Formats\SteganosPwManager2007.cs" />
     <Compile Include="DataExchange\Formats\Whisper32Csv116.cs" />
-    <Compile Include="DataExchange\ImporterPool.cs" />
+    <Compile Include="DataExchange\FileFormatPool.cs" />
+    <Compile Include="DataExchange\Formats\XslTransform2x.cs" />
     <Compile Include="DataExchange\ImportUtil.cs" />
+    <Compile Include="DataExchange\Json.cs" />
     <Compile Include="DataExchange\Kdb3File.cs" />
     <Compile Include="DataExchange\Kdb3Manager.cs" />
+    <Compile Include="DataExchange\PwExportInfo.cs" />
+    <Compile Include="Ecas\EcasContext.cs" />
+    <Compile Include="Ecas\EcasEnum.cs" />
+    <Compile Include="Ecas\EcasParameter.cs" />
+    <Compile Include="Ecas\EcasSystemEvents.cs" />
+    <Compile Include="Ecas\EcasValueType.cs" />
+    <Compile Include="Ecas\IEcasObject.cs" />
     <Compile Include="Forms\AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -313,11 +361,47 @@
     <Compile Include="Forms\DatabaseSettingsForm.Designer.cs">
       <DependentUpon>DatabaseSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\DataEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DataEditorForm.Designer.cs">
+      <DependentUpon>DataEditorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\DataViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\DataViewerForm.Designer.cs">
       <DependentUpon>DataViewerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EcasActionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EcasActionForm.Designer.cs">
+      <DependentUpon>EcasActionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EcasConditionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EcasConditionForm.Designer.cs">
+      <DependentUpon>EcasConditionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EcasEventForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EcasEventForm.Designer.cs">
+      <DependentUpon>EcasEventForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EcasTriggerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EcasTriggerForm.Designer.cs">
+      <DependentUpon>EcasTriggerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EcasTriggersForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EcasTriggersForm.Designer.cs">
+      <DependentUpon>EcasTriggersForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\EditAutoTypeItemForm.cs">
       <SubType>Form</SubType>
@@ -343,6 +427,18 @@
     <Compile Include="Forms\EntryListForm.Designer.cs">
       <DependentUpon>EntryListForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\EntryReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EntryReportForm.Designer.cs">
+      <DependentUpon>EntryReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FieldRefForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FieldRefForm.Designer.cs">
+      <DependentUpon>FieldRefForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ImportCsvForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,11 +463,11 @@
     <Compile Include="Forms\IconPickerForm.Designer.cs">
       <DependentUpon>IconPickerForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\ImportDataForm.cs">
+    <Compile Include="Forms\ExchangeDataForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\ImportDataForm.Designer.cs">
-      <DependentUpon>ImportDataForm.cs</DependentUpon>
+    <Compile Include="Forms\ExchangeDataForm.Designer.cs">
+      <DependentUpon>ExchangeDataForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ImportMethodForm.cs">
       <SubType>Form</SubType>
@@ -463,6 +559,12 @@
     <Compile Include="Forms\StatusLoggerForm.Designer.cs">
       <DependentUpon>StatusLoggerForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\StatusProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\StatusProgressForm.Designer.cs">
+      <DependentUpon>StatusProgressForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\TanWizardForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -483,11 +585,25 @@
     <Compile Include="UI\BackgroundForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\CustomListViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\CustomMenuStripEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\CustomToolStripEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\CustomTreeViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\DocumentManagerEx.cs" />
+    <Compile Include="UI\FileDialogsEx.cs" />
     <Compile Include="UI\GlobalWindowManager.cs" />
     <Compile Include="UI\IGwmWindow.cs" />
+    <Compile Include="UI\ListViewStateEx.cs" />
+    <Compile Include="UI\NotifyIconEx.cs" />
     <Compile Include="UI\PasswordListPrintDocument.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\PromptedTextBox.cs">
       <SubType>Component</SubType>
@@ -495,7 +611,8 @@
     <Compile Include="UI\ProtectedDialog.cs" />
     <Compile Include="UI\TabControlEx.cs">
     </Compile>
-    <Compile Include="UI\VistaTaskDialog.cs" />
+    <Compile Include="UI\VistaTaskDialog.cs">
+    </Compile>
     <Compile Include="Util\BinaryDataClassifier.cs" />
     <Compile Include="Util\CancellableOperationEventArgs.cs" />
     <Compile Include="Plugins\PluginInfo.cs" />
@@ -536,9 +653,27 @@
       <SubType>Designer</SubType>
       <DependentUpon>DatabaseSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DataEditorForm.resx">
+      <DependentUpon>DataEditorForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\DataViewerForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>DataViewerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EcasActionForm.resx">
+      <DependentUpon>EcasActionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EcasConditionForm.resx">
+      <DependentUpon>EcasConditionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EcasEventForm.resx">
+      <DependentUpon>EcasEventForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EcasTriggerForm.resx">
+      <DependentUpon>EcasTriggerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EcasTriggersForm.resx">
+      <DependentUpon>EcasTriggersForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EditAutoTypeItemForm.resx">
       <SubType>Designer</SubType>
@@ -556,6 +691,12 @@
       <SubType>Designer</SubType>
       <DependentUpon>EntryListForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EntryReportForm.resx">
+      <DependentUpon>EntryReportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FieldRefForm.resx">
+      <DependentUpon>FieldRefForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\ImportCsvForm.resx">
       <DependentUpon>ImportCsvForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -572,9 +713,9 @@
       <SubType>Designer</SubType>
       <DependentUpon>IconPickerForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\ImportDataForm.resx">
+    <EmbeddedResource Include="Forms\ExchangeDataForm.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>ImportDataForm.cs</DependentUpon>
+      <DependentUpon>ExchangeDataForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ImportMethodForm.resx">
       <SubType>Designer</SubType>
@@ -632,6 +773,9 @@
       <SubType>Designer</SubType>
       <DependentUpon>StatusLoggerForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\StatusProgressForm.resx">
+      <DependentUpon>StatusProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\TanWizardForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>TanWizardForm.cs</DependentUpon>
@@ -671,9 +815,27 @@
     <Compile Include="Util\ClipboardEventChainBlocker.cs" />
     <Compile Include="Util\ClipboardUtil.cs" />
     <Compile Include="Util\CommandLineArgs.cs" />
+    <Compile Include="Ecas\EcasActionType.cs" />
+    <Compile Include="Ecas\EcasConditionType.cs" />
+    <Compile Include="Ecas\EcasDefaultActionProvider.cs" />
+    <Compile Include="Ecas\EcasAction.cs" />
+    <Compile Include="Ecas\EcasActionProvider.cs" />
+    <Compile Include="Ecas\EcasCondition.cs" />
+    <Compile Include="Ecas\EcasConditionProvider.cs" />
+    <Compile Include="Ecas\EcasDefaultConditionProvider.cs" />
+    <Compile Include="Ecas\EcasDefaultEventProvider.cs" />
+    <Compile Include="Ecas\EcasEvent.cs" />
+    <Compile Include="Ecas\EcasEventProvider.cs" />
+    <Compile Include="Ecas\EcasEventType.cs" />
+    <Compile Include="Ecas\EcasPool.cs" />
+    <Compile Include="Ecas\EcasTrigger.cs" />
+    <Compile Include="Ecas\EcasTriggerSystem.cs" />
+    <Compile Include="Ecas\EcasUtil.cs" />
+    <Compile Include="Ecas\IEcasParameterized.cs" />
     <Compile Include="Util\EntryMenu.cs" />
     <Compile Include="Util\EntryTemplates.cs" />
     <Compile Include="Util\EntryUtil.cs" />
+    <Compile Include="Util\IpcUtilEx.cs" />
     <Compile Include="Util\KeyUtil.cs" />
     <Compile Include="Util\NetUtil.cs" />
     <Compile Include="Util\PwGeneratorUtil.cs" />
@@ -681,6 +843,10 @@
     <Compile Include="Util\SessionLockNotifier.cs" />
     <Compile Include="Util\HotKeyManager.cs" />
     <Compile Include="Util\ShellUtil.cs" />
+    <Compile Include="Util\Spr\SprContentFlags.cs" />
+    <Compile Include="Util\Spr\SprEncoding.cs" />
+    <Compile Include="Util\Spr\SprEngine.cs" />
+    <Compile Include="Util\TempFilesPool.cs" />
     <Compile Include="Util\TextSimilarity.cs" />
     <Compile Include="Util\WinUtil.cs" />
   </ItemGroup>
@@ -809,6 +975,25 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="KeePass.ico" />
+    <None Include="Resources\Nuvola\B16x16_Redo.png" />
+    <None Include="Resources\Images\B16x16_TextAlignRight.png" />
+    <None Include="Resources\Images\B16x16_TextAlignLeft.png" />
+    <None Include="Resources\Images\B16x16_TextAlignCenter.png" />
+    <None Include="Resources\Nuvola\B16x16_Color_Fill.png" />
+    <None Include="Resources\Nuvola\B16x16_Colorize.png" />
+    <None Include="Resources\Images\B16x16_FontStrikeout.png" />
+    <None Include="Resources\Images\B16x16_FontUnderline.png" />
+    <None Include="Resources\Images\B16x16_FontItalic.png" />
+    <None Include="Resources\Images\B16x16_FontBold.png" />
+    <None Include="Resources\Images\B16x16_Imp_FlexWallet.png" />
+    <None Include="Resources\Images\B16x16_Imp_OnePwPro.png" />
+    <None Include="Resources\Nuvola\B48x48_Make_KDevelop.png" />
+    <None Include="Resources\Nuvola\B16x16_Make_KDevelop.png" />
+    <None Include="Resources\Nuvola\B48x48_KArm.png" />
+    <None Include="Resources\Nuvola\B16x16_KArm.png" />
+    <None Include="Resources\Images\B16x16_Imp_PassKeeper.png" />
+    <None Include="Resources\Images\B16x16_Imp_PwMem2008.png" />
+    <None Include="Resources\Nuvola\B16x16_Folder_Outbox.png" />
     <None Include="Resources\Images\B16x16_Imp_RoboForm.png" />
     <None Include="Resources\Images\B16x16_Imp_SplashID.png" />
     <None Include="Resources\Images\B16x16_Imp_PwTresor.png" />
@@ -896,4 +1081,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PostBuildEvent>"$(FrameworkSDKDir)bin\sgen.exe" /assembly:"$(TargetPath)" /force /nologo /compiler:/keycontainer:VS_KEY_E6D8E2B3F89DA59B /compiler:/delaysign-</PostBuildEvent>
+  </PropertyGroup>
 </Project>

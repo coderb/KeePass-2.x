@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ using System;
 using System.Text;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using System.IO;
 
 namespace KeePassLib.Utility
 {
@@ -41,7 +42,7 @@ namespace KeePassLib.Utility
 		/// is <c>null</c>.</exception>
 		public static byte[] HexStringToByteArray(string strHexString)
 		{
-			Debug.Assert(strHexString != null); if(strHexString == null) throw new ArgumentNullException();
+			Debug.Assert(strHexString != null); if(strHexString == null) throw new ArgumentNullException("strHexString");
 
 			int nStrLen = strHexString.Length;
 			if((nStrLen & 1) != 0) return null; // Only even strings supported
@@ -50,7 +51,7 @@ namespace KeePassLib.Utility
 			byte bt;
 			char ch;
 
-			for(int i = 0; i < nStrLen; i++)
+			for(int i = 0; i < nStrLen; ++i)
 			{
 				ch = strHexString[i];
 				if((ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n')) continue;
@@ -64,7 +65,7 @@ namespace KeePassLib.Utility
 				else bt = 0;
 
 				bt <<= 4;
-				i++;
+				++i;
 
 				ch = strHexString[i];
 				if((ch >= '0') && (ch <= '9'))
@@ -85,19 +86,19 @@ namespace KeePassLib.Utility
 		/// </summary>
 		/// <param name="pbArray">Input byte array.</param>
 		/// <returns>Returns the hexadecimal string representing the byte
-		/// array. Returns <c>null</c> if the input byte array was <c>null</c>. Returns
-		/// an empty string ("") if the input byte array has length 0.</returns>
+		/// array. Returns <c>null</c>, if the input byte array was <c>null</c>. Returns
+		/// an empty string, if the input byte array has length 0.</returns>
 		public static string ByteArrayToHexString(byte[] pbArray)
 		{
-			StringBuilder sb = new StringBuilder();
-
 			if(pbArray == null) return null;
 
 			int nLen = pbArray.Length;
-			if(nLen == 0) return "";
+			if(nLen == 0) return string.Empty;
+
+			StringBuilder sb = new StringBuilder();
 
 			byte bt, btHigh, btLow;
-			for(int i = 0; i < nLen; i++)
+			for(int i = 0; i < nLen; ++i)
 			{
 				bt = pbArray[i];
 				btHigh = bt; btHigh >>= 4;
@@ -120,7 +121,7 @@ namespace KeePassLib.Utility
 		/// to zero.</param>
 		public static void ZeroByteArray(byte[] pbArray)
 		{
-			Debug.Assert(pbArray != null); if(pbArray == null) throw new ArgumentNullException();
+			Debug.Assert(pbArray != null); if(pbArray == null) throw new ArgumentNullException("pbArray");
 
 			// for(int i = 0; i < pbArray.Length; ++i)
 			//	pbArray[i] = 0;
@@ -137,7 +138,7 @@ namespace KeePassLib.Utility
 		public static ushort BytesToUInt16(byte[] pb)
 		{
 			Debug.Assert((pb != null) && (pb.Length == 2));
-			if(pb == null) throw new ArgumentNullException();
+			if(pb == null) throw new ArgumentNullException("pb");
 			if(pb.Length != 2) throw new ArgumentException();
 
 			return (ushort)((ushort)pb[0] | ((ushort)pb[1] << 8));
@@ -168,7 +169,7 @@ namespace KeePassLib.Utility
 		public static ulong BytesToUInt64(byte[] pb)
 		{
 			Debug.Assert((pb != null) && (pb.Length == 8));
-			if(pb == null) throw new ArgumentNullException();
+			if(pb == null) throw new ArgumentNullException("pb");
 			if(pb.Length != 8) throw new ArgumentException();
 
 			return (ulong)pb[0] | ((ulong)pb[1] << 8) | ((ulong)pb[2] << 16) |
@@ -186,8 +187,11 @@ namespace KeePassLib.Utility
 		{
 			byte[] pb = new byte[2];
 
-			pb[0] = (byte)(uValue & 0xFF);
-			pb[1] = (byte)(uValue >> 8);
+			unchecked
+			{
+				pb[0] = (byte)uValue;
+				pb[1] = (byte)(uValue >> 8);
+			}
 
 			return pb;
 		}
@@ -201,12 +205,15 @@ namespace KeePassLib.Utility
 		public static byte[] UInt32ToBytes(uint uValue)
 		{
 			byte[] pb = new byte[4];
-			
-			pb[0] = (byte)(uValue & 0xFF);
-			pb[1] = (byte)((uValue >> 8) & 0xFF);
-			pb[2] = (byte)((uValue >> 16) & 0xFF);
-			pb[3] = (byte)((uValue >> 24) & 0xFF);
-			
+
+			unchecked
+			{
+				pb[0] = (byte)uValue;
+				pb[1] = (byte)(uValue >> 8);
+				pb[2] = (byte)(uValue >> 16);
+				pb[3] = (byte)(uValue >> 24);
+			}
+
 			return pb;
 		}
 
@@ -220,16 +227,63 @@ namespace KeePassLib.Utility
 		{
 			byte[] pb = new byte[8];
 
-			pb[0] = (byte)(uValue & 0xFF);
-			pb[1] = (byte)((uValue >> 8) & 0xFF);
-			pb[2] = (byte)((uValue >> 16) & 0xFF);
-			pb[3] = (byte)((uValue >> 24) & 0xFF);
-			pb[4] = (byte)((uValue >> 32) & 0xFF);
-			pb[5] = (byte)((uValue >> 40) & 0xFF);
-			pb[6] = (byte)((uValue >> 48) & 0xFF);
-			pb[7] = (byte)((uValue >> 56) & 0xFF);
+			unchecked
+			{
+				pb[0] = (byte)uValue;
+				pb[1] = (byte)(uValue >> 8);
+				pb[2] = (byte)(uValue >> 16);
+				pb[3] = (byte)(uValue >> 24);
+				pb[4] = (byte)(uValue >> 32);
+				pb[5] = (byte)(uValue >> 40);
+				pb[6] = (byte)(uValue >> 48);
+				pb[7] = (byte)(uValue >> 56);
+			}
 
 			return pb;
+		}
+
+		public static bool ArraysEqual(byte[] x, byte[] y)
+		{
+			// Return false if one of them is null (not comparable)!
+			if((x == null) || (y == null)) { Debug.Assert(false); return false; }
+
+			if(x.Length != y.Length) return false;
+
+			for(int i = 0; i < x.Length; ++i)
+			{
+				if(x[i] != y[i]) return false;
+			}
+
+			return true;
+		}
+
+		public static void XorArray(byte[] pbSource, int nSourceOffset,
+			byte[] pbBuffer, int nBufferOffset, int nLength)
+		{
+			if(pbSource == null) throw new ArgumentNullException("pbSource");
+			if(nSourceOffset < 0) throw new ArgumentException();
+			if(pbBuffer == null) throw new ArgumentNullException("pbBuffer");
+			if(nBufferOffset < 0) throw new ArgumentException();
+			if(nLength < 0) throw new ArgumentException();
+			if((nSourceOffset + nLength) > pbSource.Length) throw new ArgumentException();
+			if((nBufferOffset + nLength) > pbBuffer.Length) throw new ArgumentException();
+
+			for(int i = 0; i < nLength; ++i)
+				pbBuffer[nBufferOffset + i] ^= pbSource[nSourceOffset + i];
+		}
+
+		public static void CopyStream(Stream sSource, Stream sTarget)
+		{
+			Debug.Assert((sSource != null) && (sTarget != null));
+			if(sSource == null) throw new ArgumentNullException("sSource");
+			if(sTarget == null) throw new ArgumentNullException("sTarget");
+
+			const int nBufSize = 4096;
+			byte[] pbBuf = new byte[nBufSize];
+			int nRead;
+
+			while((nRead = sSource.Read(pbBuf, 0, nBufSize)) > 0)
+				sTarget.Write(pbBuf, 0, nRead);
 		}
 	}
 }

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.50727</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{DC15F71A-2117-4DEF-8C10-AA355B5E5979}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -72,11 +72,17 @@
     <Compile Include="..\KeePassLib\Collections\PwObjectList.cs">
       <Link>Collections\PwObjectList.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Collections\StringDictionaryEx.cs">
+      <Link>Collections\StringDictionaryEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\CipherPool.cs">
       <Link>Cryptography\Cipher\CipherPool.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\ICipherEngine.cs">
       <Link>Cryptography\Cipher\ICipherEngine.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\Cipher\Salsa20Cipher.cs">
+      <Link>Cryptography\Cipher\Salsa20Cipher.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\Cipher\StandardAesEngine.cs">
       <Link>Cryptography\Cipher\StandardAesEngine.cs</Link>
@@ -87,8 +93,17 @@
     <Compile Include="..\KeePassLib\Cryptography\CryptoRandomStream.cs">
       <Link>Cryptography\CryptoRandomStream.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\HashingStreamEx.cs">
+      <Link>Cryptography\HashingStreamEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CharSetBasedGenerator.cs">
       <Link>Cryptography\PasswordGenerator\CharSetBasedGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CustomPwGenerator.cs">
+      <Link>Cryptography\PasswordGenerator\CustomPwGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\CustomPwGeneratorPool.cs">
+      <Link>Cryptography\PasswordGenerator\CustomPwGeneratorPool.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Cryptography\PasswordGenerator\PatternBasedGenerator.cs">
       <Link>Cryptography\PasswordGenerator\PatternBasedGenerator.cs</Link>
@@ -147,6 +162,12 @@
     <Compile Include="..\KeePassLib\Keys\KeyProviderPool.cs">
       <Link>Keys\KeyProviderPool.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Keys\KeyValidator.cs">
+      <Link>Keys\KeyValidator.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Keys\KeyValidatorPool.cs">
+      <Link>Keys\KeyValidatorPool.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Keys\UserKeyType.cs">
       <Link>Keys\UserKeyType.cs</Link>
     </Compile>
@@ -183,6 +204,9 @@
     <Compile Include="..\KeePassLib\Resources\KLRes.Generated.cs">
       <Link>Resources\KLRes.Generated.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Resources\KSRes.Generated.cs">
+      <Link>Resources\KSRes.Generated.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Security\ProtectedBinary.cs">
       <Link>Security\ProtectedBinary.cs</Link>
     </Compile>
@@ -191,6 +215,9 @@
     </Compile>
     <Compile Include="..\KeePassLib\Security\XorredBuffer.cs">
       <Link>Security\XorredBuffer.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Serialization\BinaryReaderEx.cs">
+      <Link>Serialization\BinaryReaderEx.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Serialization\HashedBlockStream.cs">
       <Link>Serialization\HashedBlockStream.cs</Link>

@@ -51,8 +51,9 @@
 			this.m_tbStrEng = new System.Windows.Forms.TextBox();
 			this.m_lblStrTrl = new System.Windows.Forms.Label();
 			this.m_lblStrEng = new System.Windows.Forms.Label();
-			this.m_lvStrings = new System.Windows.Forms.ListView();
+			this.m_lvStrings = new KeePass.UI.CustomListViewEx();
 			this.m_tabDialogs = new System.Windows.Forms.TabPage();
+			this.m_lblIconColorHint = new System.Windows.Forms.Label();
 			this.m_grpControl = new System.Windows.Forms.GroupBox();
 			this.m_grpControlLayout = new System.Windows.Forms.GroupBox();
 			this.m_lblLayoutHint2 = new System.Windows.Forms.Label();
@@ -70,20 +71,33 @@
 			this.m_lblCtrlTrlText = new System.Windows.Forms.Label();
 			this.m_lblCtrlEngText = new System.Windows.Forms.Label();
 			this.m_tvControls = new System.Windows.Forms.TreeView();
-			this.m_menuMain = new System.Windows.Forms.MenuStrip();
+			this.m_tabUnusedText = new System.Windows.Forms.TabPage();
+			this.m_btnClearUnusedText = new System.Windows.Forms.Button();
+			this.m_rtbUnusedText = new System.Windows.Forms.RichTextBox();
+			this.m_menuMain = new KeePass.UI.CustomMenuStripEx();
 			this.m_menuFile = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_menuFileOpen = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_menuFileSave = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_menuFileSaveAs = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_menuFileSep0 = new System.Windows.Forms.ToolStripSeparator();
+			this.m_menuFileImport = new System.Windows.Forms.ToolStripMenuItem();
+			this.m_menuFileImportLng = new System.Windows.Forms.ToolStripMenuItem();
+			this.m_menuFileSep1 = new System.Windows.Forms.ToolStripSeparator();
 			this.m_menuFileExit = new System.Windows.Forms.ToolStripMenuItem();
+			this.m_tsMain = new KeePass.UI.CustomToolStripEx();
+			this.m_tbOpen = new System.Windows.Forms.ToolStripButton();
+			this.m_tbSave = new System.Windows.Forms.ToolStripButton();
+			this.m_tbSep0 = new System.Windows.Forms.ToolStripSeparator();
+			this.m_tbFind = new System.Windows.Forms.ToolStripTextBox();
 			this.m_tabMain.SuspendLayout();
 			this.m_tabProps.SuspendLayout();
 			this.m_tabStrings.SuspendLayout();
 			this.m_tabDialogs.SuspendLayout();
 			this.m_grpControl.SuspendLayout();
 			this.m_grpControlLayout.SuspendLayout();
+			this.m_tabUnusedText.SuspendLayout();
 			this.m_menuMain.SuspendLayout();
+			this.m_tsMain.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// m_tabMain
@@ -91,11 +105,13 @@
 			this.m_tabMain.Controls.Add(this.m_tabProps);
 			this.m_tabMain.Controls.Add(this.m_tabStrings);
 			this.m_tabMain.Controls.Add(this.m_tabDialogs);
-			this.m_tabMain.Location = new System.Drawing.Point(12, 27);
+			this.m_tabMain.Controls.Add(this.m_tabUnusedText);
+			this.m_tabMain.Location = new System.Drawing.Point(12, 53);
 			this.m_tabMain.Name = "m_tabMain";
 			this.m_tabMain.SelectedIndex = 0;
 			this.m_tabMain.Size = new System.Drawing.Size(605, 461);
 			this.m_tabMain.TabIndex = 0;
+			this.m_tabMain.SelectedIndexChanged += new System.EventHandler(this.OnTabMainSelectedIndexChanged);
 			// 
 			// m_tabProps
 			// 
@@ -252,7 +268,7 @@
 			this.m_tabStrings.Padding = new System.Windows.Forms.Padding(3);
 			this.m_tabStrings.Size = new System.Drawing.Size(597, 435);
 			this.m_tabStrings.TabIndex = 1;
-			this.m_tabStrings.Text = "String Table";
+			this.m_tabStrings.Text = "String Tables";
 			this.m_tabStrings.UseVisualStyleBackColor = true;
 			// 
 			// m_lblStrSaveHint
@@ -319,14 +335,24 @@
 			// 
 			// m_tabDialogs
 			// 
+			this.m_tabDialogs.Controls.Add(this.m_lblIconColorHint);
 			this.m_tabDialogs.Controls.Add(this.m_grpControl);
 			this.m_tabDialogs.Controls.Add(this.m_tvControls);
 			this.m_tabDialogs.Location = new System.Drawing.Point(4, 22);
 			this.m_tabDialogs.Name = "m_tabDialogs";
 			this.m_tabDialogs.Size = new System.Drawing.Size(597, 435);
 			this.m_tabDialogs.TabIndex = 2;
-			this.m_tabDialogs.Text = "Customize Dialogs";
+			this.m_tabDialogs.Text = "Dialogs";
 			this.m_tabDialogs.UseVisualStyleBackColor = true;
+			// 
+			// m_lblIconColorHint
+			// 
+			this.m_lblIconColorHint.AutoSize = true;
+			this.m_lblIconColorHint.Location = new System.Drawing.Point(221, 407);
+			this.m_lblIconColorHint.Name = "m_lblIconColorHint";
+			this.m_lblIconColorHint.Size = new System.Drawing.Size(307, 13);
+			this.m_lblIconColorHint.TabIndex = 5;
+			this.m_lblIconColorHint.Text = "In a correct translation, all icons in the tree on the left are green.";
 			// 
 			// m_grpControl
 			// 
@@ -337,7 +363,7 @@
 			this.m_grpControl.Controls.Add(this.m_lblCtrlEngText);
 			this.m_grpControl.Location = new System.Drawing.Point(224, 6);
 			this.m_grpControl.Name = "m_grpControl";
-			this.m_grpControl.Size = new System.Drawing.Size(367, 423);
+			this.m_grpControl.Size = new System.Drawing.Size(367, 357);
 			this.m_grpControl.TabIndex = 1;
 			this.m_grpControl.TabStop = false;
 			this.m_grpControl.Text = "Selected Control";
@@ -354,7 +380,7 @@
 			this.m_grpControlLayout.Controls.Add(this.m_lblLayoutW);
 			this.m_grpControlLayout.Controls.Add(this.m_lblLayoutY);
 			this.m_grpControlLayout.Controls.Add(this.m_lblLayoutX);
-			this.m_grpControlLayout.Location = new System.Drawing.Point(9, 238);
+			this.m_grpControlLayout.Location = new System.Drawing.Point(9, 174);
 			this.m_grpControlLayout.Name = "m_grpControlLayout";
 			this.m_grpControlLayout.Size = new System.Drawing.Size(352, 174);
 			this.m_grpControlLayout.TabIndex = 4;
@@ -493,9 +519,39 @@
 			this.m_tvControls.Name = "m_tvControls";
 			this.m_tvControls.ShowNodeToolTips = true;
 			this.m_tvControls.ShowRootLines = false;
-			this.m_tvControls.Size = new System.Drawing.Size(190, 423);
+			this.m_tvControls.Size = new System.Drawing.Size(200, 423);
 			this.m_tvControls.TabIndex = 0;
 			this.m_tvControls.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.OnCustomControlsAfterSelect);
+			// 
+			// m_tabUnusedText
+			// 
+			this.m_tabUnusedText.Controls.Add(this.m_btnClearUnusedText);
+			this.m_tabUnusedText.Controls.Add(this.m_rtbUnusedText);
+			this.m_tabUnusedText.Location = new System.Drawing.Point(4, 22);
+			this.m_tabUnusedText.Name = "m_tabUnusedText";
+			this.m_tabUnusedText.Padding = new System.Windows.Forms.Padding(3);
+			this.m_tabUnusedText.Size = new System.Drawing.Size(597, 435);
+			this.m_tabUnusedText.TabIndex = 3;
+			this.m_tabUnusedText.Text = "Unused Text";
+			this.m_tabUnusedText.UseVisualStyleBackColor = true;
+			// 
+			// m_btnClearUnusedText
+			// 
+			this.m_btnClearUnusedText.Location = new System.Drawing.Point(516, 406);
+			this.m_btnClearUnusedText.Name = "m_btnClearUnusedText";
+			this.m_btnClearUnusedText.Size = new System.Drawing.Size(75, 23);
+			this.m_btnClearUnusedText.TabIndex = 1;
+			this.m_btnClearUnusedText.Text = "&Clear";
+			this.m_btnClearUnusedText.UseVisualStyleBackColor = true;
+			this.m_btnClearUnusedText.Click += new System.EventHandler(this.OnBtnClearUnusedText);
+			// 
+			// m_rtbUnusedText
+			// 
+			this.m_rtbUnusedText.Location = new System.Drawing.Point(6, 6);
+			this.m_rtbUnusedText.Name = "m_rtbUnusedText";
+			this.m_rtbUnusedText.Size = new System.Drawing.Size(585, 394);
+			this.m_rtbUnusedText.TabIndex = 0;
+			this.m_rtbUnusedText.Text = "";
 			// 
 			// m_menuMain
 			// 
@@ -513,6 +569,8 @@
             this.m_menuFileSave,
             this.m_menuFileSaveAs,
             this.m_menuFileSep0,
+            this.m_menuFileImport,
+            this.m_menuFileSep1,
             this.m_menuFileExit});
 			this.m_menuFile.Name = "m_menuFile";
 			this.m_menuFile.Size = new System.Drawing.Size(35, 20);
@@ -547,6 +605,26 @@
 			this.m_menuFileSep0.Name = "m_menuFileSep0";
 			this.m_menuFileSep0.Size = new System.Drawing.Size(120, 6);
 			// 
+			// m_menuFileImport
+			// 
+			this.m_menuFileImport.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.m_menuFileImportLng});
+			this.m_menuFileImport.Name = "m_menuFileImport";
+			this.m_menuFileImport.Size = new System.Drawing.Size(123, 22);
+			this.m_menuFileImport.Text = "Import";
+			// 
+			// m_menuFileImportLng
+			// 
+			this.m_menuFileImportLng.Name = "m_menuFileImportLng";
+			this.m_menuFileImportLng.Size = new System.Drawing.Size(186, 22);
+			this.m_menuFileImportLng.Text = "KeePass 1.x LNG File...";
+			this.m_menuFileImportLng.Click += new System.EventHandler(this.OnImport1xLng);
+			// 
+			// m_menuFileSep1
+			// 
+			this.m_menuFileSep1.Name = "m_menuFileSep1";
+			this.m_menuFileSep1.Size = new System.Drawing.Size(120, 6);
+			// 
 			// m_menuFileExit
 			// 
 			this.m_menuFileExit.Name = "m_menuFileExit";
@@ -554,11 +632,58 @@
 			this.m_menuFileExit.Text = "&Exit";
 			this.m_menuFileExit.Click += new System.EventHandler(this.OnFileExit);
 			// 
+			// m_tsMain
+			// 
+			this.m_tsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.m_tbOpen,
+            this.m_tbSave,
+            this.m_tbSep0,
+            this.m_tbFind});
+			this.m_tsMain.Location = new System.Drawing.Point(0, 24);
+			this.m_tsMain.Name = "m_tsMain";
+			this.m_tsMain.Size = new System.Drawing.Size(629, 25);
+			this.m_tsMain.TabIndex = 2;
+			// 
+			// m_tbOpen
+			// 
+			this.m_tbOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.m_tbOpen.Image = global::TrlUtil.Properties.Resources.B16x16_Folder_Yellow_Open;
+			this.m_tbOpen.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.m_tbOpen.Name = "m_tbOpen";
+			this.m_tbOpen.Size = new System.Drawing.Size(23, 22);
+			this.m_tbOpen.Text = "Open...";
+			this.m_tbOpen.Click += new System.EventHandler(this.OnFileOpen);
+			// 
+			// m_tbSave
+			// 
+			this.m_tbSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.m_tbSave.Image = global::TrlUtil.Properties.Resources.B16x16_FileSave;
+			this.m_tbSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.m_tbSave.Name = "m_tbSave";
+			this.m_tbSave.Size = new System.Drawing.Size(23, 22);
+			this.m_tbSave.Text = "Save";
+			this.m_tbSave.Click += new System.EventHandler(this.OnFileSave);
+			// 
+			// m_tbSep0
+			// 
+			this.m_tbSep0.Name = "m_tbSep0";
+			this.m_tbSep0.Size = new System.Drawing.Size(6, 25);
+			// 
+			// m_tbFind
+			// 
+			this.m_tbFind.AcceptsReturn = true;
+			this.m_tbFind.Name = "m_tbFind";
+			this.m_tbFind.Size = new System.Drawing.Size(180, 25);
+			this.m_tbFind.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OnFindKeyDown);
+			this.m_tbFind.KeyUp += new System.Windows.Forms.KeyEventHandler(this.OnFindKeyUp);
+			this.m_tbFind.TextChanged += new System.EventHandler(this.OnFindTextChanged);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(629, 500);
+			this.ClientSize = new System.Drawing.Size(629, 526);
+			this.Controls.Add(this.m_tsMain);
 			this.Controls.Add(this.m_tabMain);
 			this.Controls.Add(this.m_menuMain);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -574,12 +699,16 @@
 			this.m_tabStrings.ResumeLayout(false);
 			this.m_tabStrings.PerformLayout();
 			this.m_tabDialogs.ResumeLayout(false);
+			this.m_tabDialogs.PerformLayout();
 			this.m_grpControl.ResumeLayout(false);
 			this.m_grpControl.PerformLayout();
 			this.m_grpControlLayout.ResumeLayout(false);
 			this.m_grpControlLayout.PerformLayout();
+			this.m_tabUnusedText.ResumeLayout(false);
 			this.m_menuMain.ResumeLayout(false);
 			this.m_menuMain.PerformLayout();
+			this.m_tsMain.ResumeLayout(false);
+			this.m_tsMain.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -605,13 +734,13 @@
 		private System.Windows.Forms.LinkLabel m_linkLangCode;
 		private System.Windows.Forms.Label m_lblAuthorContact;
 		private System.Windows.Forms.TextBox m_tbAuthorContact;
-		private System.Windows.Forms.MenuStrip m_menuMain;
+		private KeePass.UI.CustomMenuStripEx m_menuMain;
 		private System.Windows.Forms.ToolStripMenuItem m_menuFile;
 		private System.Windows.Forms.ToolStripMenuItem m_menuFileOpen;
 		private System.Windows.Forms.ToolStripMenuItem m_menuFileSave;
 		private System.Windows.Forms.ToolStripSeparator m_menuFileSep0;
 		private System.Windows.Forms.ToolStripMenuItem m_menuFileExit;
-		private System.Windows.Forms.ListView m_lvStrings;
+		private KeePass.UI.CustomListViewEx m_lvStrings;
 		private System.Windows.Forms.TextBox m_tbStrTrl;
 		private System.Windows.Forms.TextBox m_tbStrEng;
 		private System.Windows.Forms.Label m_lblStrTrl;
@@ -635,6 +764,18 @@
 		private System.Windows.Forms.Label m_lblLayoutX;
 		private System.Windows.Forms.Label m_lblLayoutHint2;
 		private System.Windows.Forms.Label m_lblLayoutHint;
+		private System.Windows.Forms.Label m_lblIconColorHint;
+		private System.Windows.Forms.TabPage m_tabUnusedText;
+		private System.Windows.Forms.Button m_btnClearUnusedText;
+		private System.Windows.Forms.RichTextBox m_rtbUnusedText;
+		private System.Windows.Forms.ToolStripMenuItem m_menuFileImport;
+		private System.Windows.Forms.ToolStripMenuItem m_menuFileImportLng;
+		private System.Windows.Forms.ToolStripSeparator m_menuFileSep1;
+		private KeePass.UI.CustomToolStripEx m_tsMain;
+		private System.Windows.Forms.ToolStripButton m_tbOpen;
+		private System.Windows.Forms.ToolStripButton m_tbSave;
+		private System.Windows.Forms.ToolStripSeparator m_tbSep0;
+		private System.Windows.Forms.ToolStripTextBox m_tbFind;
 	}
 }
 

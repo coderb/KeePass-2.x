@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 using System.Diagnostics;
+using System.Globalization;
 
 #if !KeePassLibSD
 using System.IO.Compression;
@@ -62,15 +63,24 @@ namespace KeePassLib.Serialization
 		/// <summary>
 		/// File identifier, second 32-bit value.
 		/// </summary>
-		private const uint FileSignature2 = 0xB54BFB66;
+		private const uint FileSignature2 = 0xB54BFB67;
 
 		/// <summary>
 		/// File version of files saved by the current <c>Kdb4File</c> class.
+		/// KeePass 2.07 has version 1.01, KeePass 2.08 has 1.02.
+		/// The first 2 bytes are critical (i.e. loading will fail, if the
+		/// file version is too high), the last 2 bytes are informational.
 		/// </summary>
-		private const uint FileVersion32 = 0x00010000; // 1.00
+		private const uint FileVersion32 = 0x00010002;
 
+		// KeePass 1.x signature
 		private const uint FileSignatureOld1 = 0x9AA2D903;
 		private const uint FileSignatureOld2 = 0xB54BFB65;
+		// KeePass 2.x pre-release (alpha and beta) signature
+		private const uint FileSignaturePreRelease1 = 0x9AA2D903;
+		private const uint FileSignaturePreRelease2 = 0xB54BFB66;
+
+		private const uint FileVersionCriticalMask = 0xFFFF0000;
 
 		private const string ElemDocNode = "KeePassFile";
 		private const string ElemMeta = "Meta";
@@ -83,6 +93,9 @@ namespace KeePassLib.Serialization
 		private const string ElemDbDesc = "DatabaseDescription";
 		private const string ElemDbDefaultUser = "DefaultUserName";
 		private const string ElemDbMntncHistoryDays = "MaintenanceHistoryDays";
+		private const string ElemRecycleBinEnabled = "RecycleBinEnabled";
+		private const string ElemRecycleBinUuid = "RecycleBinUUID";
+		private const string ElemEntryTemplatesGroup = "EntryTemplatesGroup";
 		private const string ElemLastSelectedGroup = "LastSelectedGroup";
 		private const string ElemLastTopVisibleGroup = "LastTopVisibleGroup";
 
@@ -103,6 +116,7 @@ namespace KeePassLib.Serialization
 		private const string ElemHistory = "History";
 
 		private const string ElemName = "Name";
+		private const string ElemNotes = "Notes";
 		private const string ElemUuid = "UUID";
 		private const string ElemIcon = "IconID";
 		private const string ElemCustomIconID = "CustomIconUUID";
@@ -119,6 +133,8 @@ namespace KeePassLib.Serialization
 		private const string ElemUsageCount = "UsageCount";
 
 		private const string ElemGroupDefaultAutoTypeSeq = "DefaultAutoTypeSequence";
+		private const string ElemEnableAutoType = "EnableAutoType";
+		private const string ElemEnableSearching = "EnableSearching";
 
 		private const string ElemString = "String";
 		private const string ElemBinary = "Binary";
@@ -144,6 +160,9 @@ namespace KeePassLib.Serialization
 		private const string ValFalse = "False";
 		private const string ValTrue = "True";
 
+		private const string ElemCustomData = "CustomData";
+		private const string ElemStringDictExItem = "Item";
+
 		private PwDatabase m_pwDatabase = null;
 
 		private XmlTextWriter m_xmlWriter = null;
@@ -157,6 +176,12 @@ namespace KeePassLib.Serialization
 		private byte[] m_pbProtectedStreamKey = null;
 		private byte[] m_pbStreamStartBytes = null;
 
+		// ArcFourVariant only for compatibility; KeePass will default to a
+		// different (more secure) algorithm when *writing* databases
+		private CrsAlgorithm m_craInnerRandomStream = CrsAlgorithm.ArcFourVariant;
+
+		private byte[] m_pbHashOfFileOnDisk = null;
+
 		private readonly DateTime m_dtNow = DateTime.Now; // Cache current time
 
 		private const uint NeutralLanguageOffset = 0x100000; // 2^20, see 32-bit Unicode specs
@@ -167,15 +192,21 @@ namespace KeePassLib.Serialization
 		private enum Kdb4HeaderFieldID : byte
 		{
 			EndOfHeader = 0,
-			Comment,
-			CipherID,
-			CompressionFlags,
-			MasterSeed,
-			TransformSeed,
-			TransformRounds,
-			EncryptionIV,
-			ProtectedStreamKey,
-			StreamStartBytes
+			Comment = 1,
+			CipherID = 2,
+			CompressionFlags = 3,
+			MasterSeed = 4,
+			TransformSeed = 5,
+			TransformRounds = 6,
+			EncryptionIV = 7,
+			ProtectedStreamKey = 8,
+			StreamStartBytes = 9,
+			InnerRandomStreamID = 10
+		}
+
+		public byte[] HashOfFileOnDisk
+		{
+			get { return m_pbHashOfFileOnDisk; }
 		}
 
 		/// <summary>
@@ -194,7 +225,7 @@ namespace KeePassLib.Serialization
 		/// <summary>
 		/// Call this once to determine the current localization settings.
 		/// </summary>
-		public static void DetermineLanguageID()
+		public static void DetermineLanguageId()
 		{
 			// Test if localized names should be used. If localized names are used,
 			// the m_bLocalizedNames value must be set to true. By default, localized
@@ -204,7 +235,7 @@ namespace KeePassLib.Serialization
 			{
 				uint uTest = 0;
 				foreach(char ch in PwDatabase.LocalizedAppName)
-					uTest = uTest * 5 + ch; // Quick hash
+					uTest = uTest * 5 + ch;
 
 				m_bLocalizedNames = (uTest != NeutralLanguageID);
 			}

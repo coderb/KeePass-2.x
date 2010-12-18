@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -91,9 +91,7 @@ namespace KeePass.App.Configuration
 						strFile = strFile.Substring(0, strFile.Length - 4);
 				}
 				else // Base name != null
-				{
-					strFile = UrlUtil.GetFileDirectory(strFile, true) + m_strBaseName;
-				}
+					strFile = UrlUtil.GetFileDirectory(strFile, true, false) + m_strBaseName;
 
 				m_strGlobalConfigFile = strFile + ".config.xml";
 				m_strEnforcedConfigFile = strFile + ".config.enforced.xml";
@@ -114,7 +112,7 @@ namespace KeePass.App.Configuration
 				catch(Exception)
 				{
 					strUserDir = UrlUtil.GetFileDirectory(UrlUtil.FileUrlToPath(
-						Assembly.GetExecutingAssembly().GetName().CodeBase), true);
+						Assembly.GetExecutingAssembly().GetName().CodeBase), true, false);
 				}
 
 				if((!strUserDir.EndsWith(new string(Path.DirectorySeparatorChar, 1))) &&
@@ -129,6 +127,19 @@ namespace KeePass.App.Configuration
 			}
 
 			Debug.Assert(m_strCreateDir != null); Debug.Assert(m_strCreateDir.Length > 0);
+		}
+
+		private static void EnsureAppDataDirAvailable()
+		{
+			Debug.Assert((m_strCreateDir != null) && (m_strCreateDir.Length > 0));
+			if((m_strCreateDir == null) || (m_strCreateDir.Length == 0)) return;
+
+			try
+			{
+				if(Directory.Exists(m_strCreateDir) == false)
+					Directory.CreateDirectory(m_strCreateDir);
+			}
+			catch(Exception) { Debug.Assert(false); }
 		}
 
 		private static AppConfigEx LoadConfigFileEx(string strFilePath)
@@ -149,6 +160,8 @@ namespace KeePass.App.Configuration
 			catch(Exception) { } // Do not assert
 
 			if(fs != null) { fs.Close(); fs = null; }
+
+			if(tConfig != null) tConfig.OnLoad();
 
 			return tConfig;
 		}
@@ -180,12 +193,13 @@ namespace KeePass.App.Configuration
 		private static bool SaveConfigFileEx(AppConfigEx tConfig,
 			string strFilePath, bool bRemoveConfigPref)
 		{
-			tConfig.PrepareSave();
+			tConfig.OnSavePre();
 
 			XmlSerializer xmlSerial = new XmlSerializer(typeof(AppConfigEx));
 			FileStream fs = null;
 			bool bResult = true;
 
+			// Temporarily remove user file preference (restore after saving)
 			bool bConfigPref = tConfig.Meta.PreferUserConfiguration;
 			if(bRemoveConfigPref) tConfig.Meta.PreferUserConfiguration = false;
 
@@ -211,6 +225,7 @@ namespace KeePass.App.Configuration
 
 			if(bRemoveConfigPref) tConfig.Meta.PreferUserConfiguration = bConfigPref;
 
+			tConfig.OnSavePost();
 			return bResult;
 		}
 
@@ -228,12 +243,16 @@ namespace KeePass.App.Configuration
 
 			if(bPreferUser)
 			{
+				EnsureAppDataDirAvailable();
 				if(SaveConfigFileEx(tConfig, m_strUserConfigFile, true)) return true;
+
 				if(SaveConfigFileEx(tConfig, m_strGlobalConfigFile, false)) return true;
 			}
 			else // Don't prefer user -- use global first
 			{
 				if(SaveConfigFileEx(tConfig, m_strGlobalConfigFile, false)) return true;
+
+				EnsureAppDataDirAvailable();
 				if(SaveConfigFileEx(tConfig, m_strUserConfigFile, true)) return true;
 			}
 

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ namespace KeePass.UI
 			ListViewItem lviY = (bSwap ? (ListViewItem)x : (ListViewItem)y);
 			string strL, strR;
 
+			Debug.Assert(lviX.SubItems.Count == lviY.SubItems.Count);
 			if((m_nColumn <= 0) || (lviX.SubItems.Count <= m_nColumn) ||
 				(lviY.SubItems.Count <= m_nColumn))
 			{

@@ -2,9 +2,10 @@ MKDIR KeePass_Distrib
 DEL /F /S /Q KeePass_Distrib\*.*
 
 COPY /B KeePass\Debug\KeePass.exe /B KeePass_Distrib\KeePass.exe
+COPY /B KeePass\Debug\KeePass.XmlSerializers.dll /B KeePass_Distrib\KeePass.XmlSerializers.dll
 
-COPY /B KeePassNtv\Debug\KeePassNtv32.dll /B KeePass_Distrib\KeePassNtv32.dll
-COPY /B "KeePassNtv\Debug x64\KeePassNtv64.dll" /B KeePass_Distrib\KeePassNtv64.dll
+REM COPY /B KeePassNtv\Debug\KeePassNtv32.dll /B KeePass_Distrib\KeePassNtv32.dll
+REM COPY /B "KeePassNtv\Debug x64\KeePassNtv64.dll" /B KeePass_Distrib\KeePassNtv64.dll
 
 COPY /B ..\Ext\KeePass.config.xml /B KeePass_Distrib\KeePass.config.xml
 
@@ -20,7 +21,7 @@ COPY /B ..\..\..\Homepage_KeePass\Build_Chm_v2\KeePass.chm /B KeePass_Distrib\Ke
 CD KeePass_Distrib
 MKDIR XSL
 CD ..
-XCOPY ..\Ext\XSL\*.* KeePass_Distrib\XSL\*.* /S /E /V /O /K /H
+XCOPY ..\Ext\XSL\*.* KeePass_Distrib\XSL\ /V /K /H
 
 MKDIR KeePassLib_Distrib
 DEL /F /S /Q KeePassLib_Distrib\*.*

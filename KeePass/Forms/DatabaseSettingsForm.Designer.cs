@@ -71,6 +71,14 @@
 			this.m_lblHeaderCp = new System.Windows.Forms.Label();
 			this.m_rbGZip = new System.Windows.Forms.RadioButton();
 			this.m_rbNone = new System.Windows.Forms.RadioButton();
+			this.m_tabRecycleBin = new System.Windows.Forms.TabPage();
+			this.m_cmbRecycleBin = new System.Windows.Forms.ComboBox();
+			this.m_lblRecycleBinGroup = new System.Windows.Forms.Label();
+			this.m_lblRecycleBinInfo = new System.Windows.Forms.Label();
+			this.m_cbRecycleBin = new System.Windows.Forms.CheckBox();
+			this.m_tabTemplates = new System.Windows.Forms.TabPage();
+			this.m_lblEntryTemplatesGroup = new System.Windows.Forms.Label();
+			this.m_cmbEntryTemplates = new System.Windows.Forms.ComboBox();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
 			this.m_grpEncAlgo.SuspendLayout();
 			this.m_grpKeyTrans.SuspendLayout();
@@ -80,6 +88,8 @@
 			this.m_tabSecurity.SuspendLayout();
 			this.m_tabProtection.SuspendLayout();
 			this.m_tabCompression.SuspendLayout();
+			this.m_tabRecycleBin.SuspendLayout();
+			this.m_tabTemplates.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// m_bannerImage
@@ -119,7 +129,7 @@
 			this.m_grpEncAlgo.Controls.Add(this.m_cmbEncAlgo);
 			this.m_grpEncAlgo.Location = new System.Drawing.Point(9, 37);
 			this.m_grpEncAlgo.Name = "m_grpEncAlgo";
-			this.m_grpEncAlgo.Size = new System.Drawing.Size(436, 48);
+			this.m_grpEncAlgo.Size = new System.Drawing.Size(436, 53);
 			this.m_grpEncAlgo.TabIndex = 1;
 			this.m_grpEncAlgo.TabStop = false;
 			this.m_grpEncAlgo.Text = "Encryption";
@@ -139,14 +149,14 @@
 			this.m_cmbEncAlgo.FormattingEnabled = true;
 			this.m_cmbEncAlgo.Location = new System.Drawing.Point(206, 19);
 			this.m_cmbEncAlgo.Name = "m_cmbEncAlgo";
-			this.m_cmbEncAlgo.Size = new System.Drawing.Size(224, 21);
+			this.m_cmbEncAlgo.Size = new System.Drawing.Size(219, 21);
 			this.m_cmbEncAlgo.TabIndex = 1;
 			// 
 			// m_lblTransIntro
 			// 
 			this.m_lblTransIntro.Location = new System.Drawing.Point(6, 16);
 			this.m_lblTransIntro.Name = "m_lblTransIntro";
-			this.m_lblTransIntro.Size = new System.Drawing.Size(429, 40);
+			this.m_lblTransIntro.Size = new System.Drawing.Size(424, 40);
 			this.m_lblTransIntro.TabIndex = 0;
 			this.m_lblTransIntro.Text = "The composite master key is transformed several times before being used as encryp" +
 				"tion key for the database. This adds a constant time factor and makes dictionary" +
@@ -165,7 +175,7 @@
 			// 
 			this.m_lblTransInfo.Location = new System.Drawing.Point(6, 103);
 			this.m_lblTransInfo.Name = "m_lblTransInfo";
-			this.m_lblTransInfo.Size = new System.Drawing.Size(429, 28);
+			this.m_lblTransInfo.Size = new System.Drawing.Size(424, 28);
 			this.m_lblTransInfo.TabIndex = 4;
 			this.m_lblTransInfo.Text = "The higher this number the harder are dictionary attacks. But also database loadi" +
 				"ng/saving takes more time.";
@@ -177,9 +187,9 @@
 			this.m_grpKeyTrans.Controls.Add(this.m_lblTransIntro);
 			this.m_grpKeyTrans.Controls.Add(this.m_lblTransInfo);
 			this.m_grpKeyTrans.Controls.Add(this.m_lblTransNum);
-			this.m_grpKeyTrans.Location = new System.Drawing.Point(9, 91);
+			this.m_grpKeyTrans.Location = new System.Drawing.Point(9, 96);
 			this.m_grpKeyTrans.Name = "m_grpKeyTrans";
-			this.m_grpKeyTrans.Size = new System.Drawing.Size(441, 137);
+			this.m_grpKeyTrans.Size = new System.Drawing.Size(436, 140);
 			this.m_grpKeyTrans.TabIndex = 2;
 			this.m_grpKeyTrans.TabStop = false;
 			this.m_grpKeyTrans.Text = "Key transformation";
@@ -193,14 +203,13 @@
 			this.m_lnkCompute1SecDelay.TabIndex = 3;
 			this.m_lnkCompute1SecDelay.TabStop = true;
 			this.m_lnkCompute1SecDelay.Text = "1 second delay";
-			this.m_ttRect.SetToolTip(this.m_lnkCompute1SecDelay, "Compute the number of rounds that lead to a delay of 1 second on this computer.");
 			this.m_lnkCompute1SecDelay.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.OnLinkClicked1SecondDelayRounds);
 			// 
 			// m_numEncRounds
 			// 
 			this.m_numEncRounds.Location = new System.Drawing.Point(206, 61);
 			this.m_numEncRounds.Name = "m_numEncRounds";
-			this.m_numEncRounds.Size = new System.Drawing.Size(229, 20);
+			this.m_numEncRounds.Size = new System.Drawing.Size(219, 20);
 			this.m_numEncRounds.TabIndex = 2;
 			this.m_numEncRounds.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
 			// 
@@ -223,9 +232,9 @@
 			// 
 			// m_lblCompressionIntro
 			// 
-			this.m_lblCompressionIntro.Location = new System.Drawing.Point(8, 10);
+			this.m_lblCompressionIntro.Location = new System.Drawing.Point(6, 12);
 			this.m_lblCompressionIntro.Name = "m_lblCompressionIntro";
-			this.m_lblCompressionIntro.Size = new System.Drawing.Size(430, 15);
+			this.m_lblCompressionIntro.Size = new System.Drawing.Size(435, 15);
 			this.m_lblCompressionIntro.TabIndex = 0;
 			this.m_lblCompressionIntro.Text = "Data compression reduces the size of the database.";
 			// 
@@ -235,6 +244,8 @@
 			this.m_tabMain.Controls.Add(this.m_tabSecurity);
 			this.m_tabMain.Controls.Add(this.m_tabProtection);
 			this.m_tabMain.Controls.Add(this.m_tabCompression);
+			this.m_tabMain.Controls.Add(this.m_tabRecycleBin);
+			this.m_tabMain.Controls.Add(this.m_tabTemplates);
 			this.m_tabMain.Location = new System.Drawing.Point(12, 66);
 			this.m_tabMain.Name = "m_tabMain";
 			this.m_tabMain.SelectedIndex = 0;
@@ -276,7 +287,6 @@
 			// m_tbDbDesc
 			// 
 			this.m_tbDbDesc.AcceptsReturn = true;
-			this.m_tbDbDesc.AcceptsTab = true;
 			this.m_tbDbDesc.Location = new System.Drawing.Point(9, 57);
 			this.m_tbDbDesc.Multiline = true;
 			this.m_tbDbDesc.Name = "m_tbDbDesc";
@@ -397,10 +407,9 @@
 			// 
 			// m_lblProtIntro
 			// 
-			this.m_lblProtIntro.AutoSize = true;
 			this.m_lblProtIntro.Location = new System.Drawing.Point(6, 12);
 			this.m_lblProtIntro.Name = "m_lblProtIntro";
-			this.m_lblProtIntro.Size = new System.Drawing.Size(407, 13);
+			this.m_lblProtIntro.Size = new System.Drawing.Size(434, 13);
 			this.m_lblProtIntro.TabIndex = 0;
 			this.m_lblProtIntro.Text = "On this page you can configure run-time memory protection settings for this datab" +
 				"ase.";
@@ -514,6 +523,87 @@
 			this.m_rbNone.Text = "None";
 			this.m_rbNone.UseVisualStyleBackColor = true;
 			// 
+			// m_tabRecycleBin
+			// 
+			this.m_tabRecycleBin.Controls.Add(this.m_cmbRecycleBin);
+			this.m_tabRecycleBin.Controls.Add(this.m_lblRecycleBinGroup);
+			this.m_tabRecycleBin.Controls.Add(this.m_lblRecycleBinInfo);
+			this.m_tabRecycleBin.Controls.Add(this.m_cbRecycleBin);
+			this.m_tabRecycleBin.Location = new System.Drawing.Point(4, 22);
+			this.m_tabRecycleBin.Name = "m_tabRecycleBin";
+			this.m_tabRecycleBin.Padding = new System.Windows.Forms.Padding(3);
+			this.m_tabRecycleBin.Size = new System.Drawing.Size(454, 294);
+			this.m_tabRecycleBin.TabIndex = 4;
+			this.m_tabRecycleBin.Text = "Recycle Bin";
+			this.m_tabRecycleBin.UseVisualStyleBackColor = true;
+			// 
+			// m_cmbRecycleBin
+			// 
+			this.m_cmbRecycleBin.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.m_cmbRecycleBin.FormattingEnabled = true;
+			this.m_cmbRecycleBin.Location = new System.Drawing.Point(11, 103);
+			this.m_cmbRecycleBin.Name = "m_cmbRecycleBin";
+			this.m_cmbRecycleBin.Size = new System.Drawing.Size(429, 21);
+			this.m_cmbRecycleBin.TabIndex = 3;
+			// 
+			// m_lblRecycleBinGroup
+			// 
+			this.m_lblRecycleBinGroup.AutoSize = true;
+			this.m_lblRecycleBinGroup.Location = new System.Drawing.Point(8, 87);
+			this.m_lblRecycleBinGroup.Name = "m_lblRecycleBinGroup";
+			this.m_lblRecycleBinGroup.Size = new System.Drawing.Size(96, 13);
+			this.m_lblRecycleBinGroup.TabIndex = 2;
+			this.m_lblRecycleBinGroup.Text = "Recycle bin group:";
+			// 
+			// m_lblRecycleBinInfo
+			// 
+			this.m_lblRecycleBinInfo.Location = new System.Drawing.Point(28, 36);
+			this.m_lblRecycleBinInfo.Name = "m_lblRecycleBinInfo";
+			this.m_lblRecycleBinInfo.Size = new System.Drawing.Size(412, 40);
+			this.m_lblRecycleBinInfo.TabIndex = 1;
+			this.m_lblRecycleBinInfo.Text = "If this option is enabled, KeePass moves entries/groups to the recycle bin group " +
+				"instead of deleting them. Deleting an entry/group from the recycle bin will perm" +
+				"anently remove it.";
+			// 
+			// m_cbRecycleBin
+			// 
+			this.m_cbRecycleBin.AutoSize = true;
+			this.m_cbRecycleBin.Location = new System.Drawing.Point(11, 16);
+			this.m_cbRecycleBin.Name = "m_cbRecycleBin";
+			this.m_cbRecycleBin.Size = new System.Drawing.Size(108, 17);
+			this.m_cbRecycleBin.TabIndex = 0;
+			this.m_cbRecycleBin.Text = "&Use a recycle bin";
+			this.m_cbRecycleBin.UseVisualStyleBackColor = true;
+			// 
+			// m_tabTemplates
+			// 
+			this.m_tabTemplates.Controls.Add(this.m_cmbEntryTemplates);
+			this.m_tabTemplates.Controls.Add(this.m_lblEntryTemplatesGroup);
+			this.m_tabTemplates.Location = new System.Drawing.Point(4, 22);
+			this.m_tabTemplates.Name = "m_tabTemplates";
+			this.m_tabTemplates.Size = new System.Drawing.Size(454, 294);
+			this.m_tabTemplates.TabIndex = 5;
+			this.m_tabTemplates.Text = "Templates";
+			this.m_tabTemplates.UseVisualStyleBackColor = true;
+			// 
+			// m_lblEntryTemplatesGroup
+			// 
+			this.m_lblEntryTemplatesGroup.AutoSize = true;
+			this.m_lblEntryTemplatesGroup.Location = new System.Drawing.Point(6, 12);
+			this.m_lblEntryTemplatesGroup.Name = "m_lblEntryTemplatesGroup";
+			this.m_lblEntryTemplatesGroup.Size = new System.Drawing.Size(112, 13);
+			this.m_lblEntryTemplatesGroup.TabIndex = 0;
+			this.m_lblEntryTemplatesGroup.Text = "Entry templates group:";
+			// 
+			// m_cmbEntryTemplates
+			// 
+			this.m_cmbEntryTemplates.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.m_cmbEntryTemplates.FormattingEnabled = true;
+			this.m_cmbEntryTemplates.Location = new System.Drawing.Point(9, 31);
+			this.m_cmbEntryTemplates.Name = "m_cmbEntryTemplates";
+			this.m_cmbEntryTemplates.Size = new System.Drawing.Size(433, 21);
+			this.m_cmbEntryTemplates.TabIndex = 1;
+			// 
 			// DatabaseSettingsForm
 			// 
 			this.AcceptButton = this.m_btnOK;
@@ -533,8 +623,8 @@
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "<DYN>";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.m_grpEncAlgo.ResumeLayout(false);
 			this.m_grpEncAlgo.PerformLayout();
@@ -550,6 +640,10 @@
 			this.m_tabProtection.PerformLayout();
 			this.m_tabCompression.ResumeLayout(false);
 			this.m_tabCompression.PerformLayout();
+			this.m_tabRecycleBin.ResumeLayout(false);
+			this.m_tabRecycleBin.PerformLayout();
+			this.m_tabTemplates.ResumeLayout(false);
+			this.m_tabTemplates.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -598,5 +692,13 @@
 		private System.Windows.Forms.Label m_lblViewHint;
 		private System.Windows.Forms.TextBox m_tbDefaultUser;
 		private System.Windows.Forms.Label m_lblDefaultUser;
+		private System.Windows.Forms.TabPage m_tabRecycleBin;
+		private System.Windows.Forms.Label m_lblRecycleBinInfo;
+		private System.Windows.Forms.CheckBox m_cbRecycleBin;
+		private System.Windows.Forms.ComboBox m_cmbRecycleBin;
+		private System.Windows.Forms.Label m_lblRecycleBinGroup;
+		private System.Windows.Forms.TabPage m_tabTemplates;
+		private System.Windows.Forms.ComboBox m_cmbEntryTemplates;
+		private System.Windows.Forms.Label m_lblEntryTemplatesGroup;
 	}
 }

@@ -39,22 +39,32 @@
 			this.m_tabGeneral = new System.Windows.Forms.TabPage();
 			this.m_dtExpires = new System.Windows.Forms.DateTimePicker();
 			this.m_cbExpires = new System.Windows.Forms.CheckBox();
+			this.m_tabNotes = new System.Windows.Forms.TabPage();
+			this.m_tbNotes = new System.Windows.Forms.TextBox();
+			this.m_tabBehavior = new System.Windows.Forms.TabPage();
+			this.m_cmbEnableSearching = new System.Windows.Forms.ComboBox();
+			this.m_cmbEnableAutoType = new System.Windows.Forms.ComboBox();
+			this.m_lblEnableSearching = new System.Windows.Forms.Label();
+			this.m_lblEnableAutoType = new System.Windows.Forms.Label();
 			this.m_tabAutoType = new System.Windows.Forms.TabPage();
 			this.m_btnAutoTypeEdit = new System.Windows.Forms.Button();
 			this.m_rbAutoTypeOverride = new System.Windows.Forms.RadioButton();
 			this.m_rbAutoTypeInherit = new System.Windows.Forms.RadioButton();
 			this.m_lblAutoTypeDesc = new System.Windows.Forms.Label();
 			this.m_tbDefaultAutoTypeSeq = new System.Windows.Forms.TextBox();
+			this.m_lblNotesHint = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
 			this.m_tabMain.SuspendLayout();
 			this.m_tabGeneral.SuspendLayout();
+			this.m_tabNotes.SuspendLayout();
+			this.m_tabBehavior.SuspendLayout();
 			this.m_tabAutoType.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// m_lblName
 			// 
 			this.m_lblName.AutoSize = true;
-			this.m_lblName.Location = new System.Drawing.Point(6, 14);
+			this.m_lblName.Location = new System.Drawing.Point(3, 11);
 			this.m_lblName.Name = "m_lblName";
 			this.m_lblName.Size = new System.Drawing.Size(38, 13);
 			this.m_lblName.TabIndex = 1;
@@ -101,7 +111,7 @@
 			// m_lblIcon
 			// 
 			this.m_lblIcon.AutoSize = true;
-			this.m_lblIcon.Location = new System.Drawing.Point(6, 42);
+			this.m_lblIcon.Location = new System.Drawing.Point(3, 39);
 			this.m_lblIcon.Name = "m_lblIcon";
 			this.m_lblIcon.Size = new System.Drawing.Size(31, 13);
 			this.m_lblIcon.TabIndex = 2;
@@ -119,6 +129,8 @@
 			// m_tabMain
 			// 
 			this.m_tabMain.Controls.Add(this.m_tabGeneral);
+			this.m_tabMain.Controls.Add(this.m_tabNotes);
+			this.m_tabMain.Controls.Add(this.m_tabBehavior);
 			this.m_tabMain.Controls.Add(this.m_tabAutoType);
 			this.m_tabMain.Location = new System.Drawing.Point(12, 66);
 			this.m_tabMain.Name = "m_tabMain";
@@ -136,7 +148,6 @@
 			this.m_tabGeneral.Controls.Add(this.m_lblIcon);
 			this.m_tabGeneral.Location = new System.Drawing.Point(4, 22);
 			this.m_tabGeneral.Name = "m_tabGeneral";
-			this.m_tabGeneral.Padding = new System.Windows.Forms.Padding(3);
 			this.m_tabGeneral.Size = new System.Drawing.Size(356, 140);
 			this.m_tabGeneral.TabIndex = 0;
 			this.m_tabGeneral.Text = "General";
@@ -154,12 +165,82 @@
 			// m_cbExpires
 			// 
 			this.m_cbExpires.AutoSize = true;
-			this.m_cbExpires.Location = new System.Drawing.Point(9, 108);
+			this.m_cbExpires.Location = new System.Drawing.Point(6, 105);
 			this.m_cbExpires.Name = "m_cbExpires";
 			this.m_cbExpires.Size = new System.Drawing.Size(63, 17);
 			this.m_cbExpires.TabIndex = 4;
 			this.m_cbExpires.Text = "Expires:";
 			this.m_cbExpires.UseVisualStyleBackColor = true;
+			// 
+			// m_tabNotes
+			// 
+			this.m_tabNotes.Controls.Add(this.m_lblNotesHint);
+			this.m_tabNotes.Controls.Add(this.m_tbNotes);
+			this.m_tabNotes.Location = new System.Drawing.Point(4, 22);
+			this.m_tabNotes.Name = "m_tabNotes";
+			this.m_tabNotes.Size = new System.Drawing.Size(356, 140);
+			this.m_tabNotes.TabIndex = 2;
+			this.m_tabNotes.Text = "Notes";
+			this.m_tabNotes.UseVisualStyleBackColor = true;
+			// 
+			// m_tbNotes
+			// 
+			this.m_tbNotes.AcceptsReturn = true;
+			this.m_tbNotes.Location = new System.Drawing.Point(6, 10);
+			this.m_tbNotes.Multiline = true;
+			this.m_tbNotes.Name = "m_tbNotes";
+			this.m_tbNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this.m_tbNotes.Size = new System.Drawing.Size(341, 107);
+			this.m_tbNotes.TabIndex = 0;
+			// 
+			// m_tabBehavior
+			// 
+			this.m_tabBehavior.Controls.Add(this.m_cmbEnableSearching);
+			this.m_tabBehavior.Controls.Add(this.m_cmbEnableAutoType);
+			this.m_tabBehavior.Controls.Add(this.m_lblEnableSearching);
+			this.m_tabBehavior.Controls.Add(this.m_lblEnableAutoType);
+			this.m_tabBehavior.Location = new System.Drawing.Point(4, 22);
+			this.m_tabBehavior.Name = "m_tabBehavior";
+			this.m_tabBehavior.Size = new System.Drawing.Size(356, 140);
+			this.m_tabBehavior.TabIndex = 3;
+			this.m_tabBehavior.Text = "Behavior";
+			this.m_tabBehavior.UseVisualStyleBackColor = true;
+			// 
+			// m_cmbEnableSearching
+			// 
+			this.m_cmbEnableSearching.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.m_cmbEnableSearching.FormattingEnabled = true;
+			this.m_cmbEnableSearching.Location = new System.Drawing.Point(9, 74);
+			this.m_cmbEnableSearching.Name = "m_cmbEnableSearching";
+			this.m_cmbEnableSearching.Size = new System.Drawing.Size(334, 21);
+			this.m_cmbEnableSearching.TabIndex = 3;
+			// 
+			// m_cmbEnableAutoType
+			// 
+			this.m_cmbEnableAutoType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.m_cmbEnableAutoType.FormattingEnabled = true;
+			this.m_cmbEnableAutoType.Location = new System.Drawing.Point(9, 25);
+			this.m_cmbEnableAutoType.Name = "m_cmbEnableAutoType";
+			this.m_cmbEnableAutoType.Size = new System.Drawing.Size(334, 21);
+			this.m_cmbEnableAutoType.TabIndex = 1;
+			// 
+			// m_lblEnableSearching
+			// 
+			this.m_lblEnableSearching.AutoSize = true;
+			this.m_lblEnableSearching.Location = new System.Drawing.Point(6, 58);
+			this.m_lblEnableSearching.Name = "m_lblEnableSearching";
+			this.m_lblEnableSearching.Size = new System.Drawing.Size(152, 13);
+			this.m_lblEnableSearching.TabIndex = 2;
+			this.m_lblEnableSearching.Text = "Searching entries in this group:";
+			// 
+			// m_lblEnableAutoType
+			// 
+			this.m_lblEnableAutoType.AutoSize = true;
+			this.m_lblEnableAutoType.Location = new System.Drawing.Point(6, 9);
+			this.m_lblEnableAutoType.Name = "m_lblEnableAutoType";
+			this.m_lblEnableAutoType.Size = new System.Drawing.Size(168, 13);
+			this.m_lblEnableAutoType.TabIndex = 0;
+			this.m_lblEnableAutoType.Text = "Auto-Type for entries in this group:";
 			// 
 			// m_tabAutoType
 			// 
@@ -170,7 +251,6 @@
 			this.m_tabAutoType.Controls.Add(this.m_tbDefaultAutoTypeSeq);
 			this.m_tabAutoType.Location = new System.Drawing.Point(4, 22);
 			this.m_tabAutoType.Name = "m_tabAutoType";
-			this.m_tabAutoType.Padding = new System.Windows.Forms.Padding(3);
 			this.m_tabAutoType.Size = new System.Drawing.Size(356, 140);
 			this.m_tabAutoType.TabIndex = 1;
 			this.m_tabAutoType.Text = "Auto-Type";
@@ -189,7 +269,7 @@
 			// m_rbAutoTypeOverride
 			// 
 			this.m_rbAutoTypeOverride.AutoSize = true;
-			this.m_rbAutoTypeOverride.Location = new System.Drawing.Point(12, 36);
+			this.m_rbAutoTypeOverride.Location = new System.Drawing.Point(9, 33);
 			this.m_rbAutoTypeOverride.Name = "m_rbAutoTypeOverride";
 			this.m_rbAutoTypeOverride.Size = new System.Drawing.Size(153, 17);
 			this.m_rbAutoTypeOverride.TabIndex = 1;
@@ -200,7 +280,7 @@
 			// m_rbAutoTypeInherit
 			// 
 			this.m_rbAutoTypeInherit.AutoSize = true;
-			this.m_rbAutoTypeInherit.Location = new System.Drawing.Point(12, 13);
+			this.m_rbAutoTypeInherit.Location = new System.Drawing.Point(9, 10);
 			this.m_rbAutoTypeInherit.Name = "m_rbAutoTypeInherit";
 			this.m_rbAutoTypeInherit.Size = new System.Drawing.Size(272, 17);
 			this.m_rbAutoTypeInherit.TabIndex = 0;
@@ -225,6 +305,15 @@
 			this.m_tbDefaultAutoTypeSeq.Size = new System.Drawing.Size(280, 20);
 			this.m_tbDefaultAutoTypeSeq.TabIndex = 2;
 			// 
+			// m_lblNotesHint
+			// 
+			this.m_lblNotesHint.AutoSize = true;
+			this.m_lblNotesHint.Location = new System.Drawing.Point(3, 121);
+			this.m_lblNotesHint.Name = "m_lblNotesHint";
+			this.m_lblNotesHint.Size = new System.Drawing.Size(167, 13);
+			this.m_lblNotesHint.TabIndex = 1;
+			this.m_lblNotesHint.Text = "Notes are shown in group tooltips.";
+			// 
 			// GroupForm
 			// 
 			this.AcceptButton = this.m_btnOK;
@@ -243,12 +332,16 @@
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Edit Group";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.m_tabMain.ResumeLayout(false);
 			this.m_tabGeneral.ResumeLayout(false);
 			this.m_tabGeneral.PerformLayout();
+			this.m_tabNotes.ResumeLayout(false);
+			this.m_tabNotes.PerformLayout();
+			this.m_tabBehavior.ResumeLayout(false);
+			this.m_tabBehavior.PerformLayout();
 			this.m_tabAutoType.ResumeLayout(false);
 			this.m_tabAutoType.PerformLayout();
 			this.ResumeLayout(false);
@@ -274,5 +367,13 @@
 		private System.Windows.Forms.RadioButton m_rbAutoTypeInherit;
 		private System.Windows.Forms.RadioButton m_rbAutoTypeOverride;
 		private System.Windows.Forms.Button m_btnAutoTypeEdit;
+		private System.Windows.Forms.TabPage m_tabNotes;
+		private System.Windows.Forms.TextBox m_tbNotes;
+		private System.Windows.Forms.TabPage m_tabBehavior;
+		private System.Windows.Forms.Label m_lblEnableSearching;
+		private System.Windows.Forms.Label m_lblEnableAutoType;
+		private System.Windows.Forms.ComboBox m_cmbEnableSearching;
+		private System.Windows.Forms.ComboBox m_cmbEnableAutoType;
+		private System.Windows.Forms.Label m_lblNotesHint;
 	}
 }

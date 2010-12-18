@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
+
+using KeePass.Ecas;
 
 using KeePassLib.Serialization;
 
@@ -104,6 +106,17 @@ namespace KeePass.App.Configuration
 				m_fc = value;
 			}
 		}
+
+		private EcasTriggerSystem m_triggers = new EcasTriggerSystem();
+		public EcasTriggerSystem TriggerSystem
+		{
+			get { return m_triggers; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_triggers = value;
+			}
+		}
 	}
 
 	public sealed class AceStartUp
@@ -171,11 +184,13 @@ namespace KeePass.App.Configuration
 
 	public sealed class AceMru
 	{
+		public const uint DefaultMaxItemCount = 12;
+
 		public AceMru()
 		{
 		}
 
-		private uint m_uMaxItems = 12;
+		private uint m_uMaxItems = DefaultMaxItemCount;
 		public uint MaxItemCount
 		{
 			get { return m_uMaxItems; }
@@ -183,6 +198,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private List<IOConnectionInfo> m_vItems = new List<IOConnectionInfo>();
+		[XmlArrayItem("ConnectionInfo")]
 		public List<IOConnectionInfo> Items
 		{
 			get { return m_vItems; }

@@ -41,7 +41,6 @@
 			this.m_ttRect = new System.Windows.Forms.ToolTip(this.components);
 			this.m_btnHelp = new System.Windows.Forms.Button();
 			this.m_lblSeparator = new System.Windows.Forms.Label();
-			this.m_openKeyFileDialog = new System.Windows.Forms.OpenFileDialog();
 			this.m_cmbKeyFile = new System.Windows.Forms.ComboBox();
 			this.m_timerKeyFileFiller = new System.Windows.Forms.Timer(this.components);
 			this.m_btnExit = new System.Windows.Forms.Button();
@@ -56,17 +55,16 @@
 			this.m_cbUserAccount.Name = "m_cbUserAccount";
 			this.m_cbUserAccount.Size = new System.Drawing.Size(158, 17);
 			this.m_cbUserAccount.TabIndex = 5;
-			this.m_cbUserAccount.Text = "Windows User Account";
+			this.m_cbUserAccount.Text = "Windows &User Account";
 			this.m_cbUserAccount.UseVisualStyleBackColor = true;
 			// 
 			// m_btnOpenKeyFile
 			// 
 			this.m_btnOpenKeyFile.Image = global::KeePass.Properties.Resources.B16x16_Folder_Blue_Open;
-			this.m_btnOpenKeyFile.Location = new System.Drawing.Point(373, 96);
+			this.m_btnOpenKeyFile.Location = new System.Drawing.Point(373, 97);
 			this.m_btnOpenKeyFile.Name = "m_btnOpenKeyFile";
 			this.m_btnOpenKeyFile.Size = new System.Drawing.Size(32, 23);
 			this.m_btnOpenKeyFile.TabIndex = 4;
-			this.m_ttRect.SetToolTip(this.m_btnOpenKeyFile, "Select key-file manually.");
 			this.m_btnOpenKeyFile.UseVisualStyleBackColor = true;
 			this.m_btnOpenKeyFile.Click += new System.EventHandler(this.OnClickKeyFileBrowse);
 			// 
@@ -78,7 +76,7 @@
 			this.m_cbKeyFile.Name = "m_cbKeyFile";
 			this.m_cbKeyFile.Size = new System.Drawing.Size(75, 17);
 			this.m_cbKeyFile.TabIndex = 2;
-			this.m_cbKeyFile.Text = "Key File:";
+			this.m_cbKeyFile.Text = "&Key File:";
 			this.m_cbKeyFile.UseVisualStyleBackColor = true;
 			this.m_cbKeyFile.CheckedChanged += new System.EventHandler(this.OnCheckedKeyFile);
 			// 
@@ -98,7 +96,7 @@
 			this.m_cbPassword.Name = "m_cbPassword";
 			this.m_cbPassword.Size = new System.Drawing.Size(126, 17);
 			this.m_cbPassword.TabIndex = 10;
-			this.m_cbPassword.Text = "Master Password:";
+			this.m_cbPassword.Text = "Master &Password:";
 			this.m_cbPassword.UseVisualStyleBackColor = true;
 			this.m_cbPassword.CheckedChanged += new System.EventHandler(this.OnCheckedPassword);
 			// 
@@ -137,11 +135,10 @@
 			// 
 			this.m_cbHidePassword.Appearance = System.Windows.Forms.Appearance.Button;
 			this.m_cbHidePassword.Image = global::KeePass.Properties.Resources.B17x05_3BlackDots;
-			this.m_cbHidePassword.Location = new System.Drawing.Point(373, 71);
+			this.m_cbHidePassword.Location = new System.Drawing.Point(373, 72);
 			this.m_cbHidePassword.Name = "m_cbHidePassword";
 			this.m_cbHidePassword.Size = new System.Drawing.Size(32, 23);
 			this.m_cbHidePassword.TabIndex = 1;
-			this.m_ttRect.SetToolTip(this.m_cbHidePassword, "Show/hide password using asterisks.");
 			this.m_cbHidePassword.UseVisualStyleBackColor = true;
 			this.m_cbHidePassword.CheckedChanged += new System.EventHandler(this.OnCheckedHidePassword);
 			// 
@@ -171,13 +168,6 @@
 			this.m_lblSeparator.Size = new System.Drawing.Size(417, 2);
 			this.m_lblSeparator.TabIndex = 9;
 			// 
-			// m_openKeyFileDialog
-			// 
-			this.m_openKeyFileDialog.Filter = "Key Files (*.key)|*.key|All Files (*.*)|*.*";
-			this.m_openKeyFileDialog.RestoreDirectory = true;
-			this.m_openKeyFileDialog.SupportMultiDottedExtensions = true;
-			this.m_openKeyFileDialog.Title = "Select Key File";
-			// 
 			// m_cmbKeyFile
 			// 
 			this.m_cmbKeyFile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -200,7 +190,7 @@
 			this.m_btnExit.Name = "m_btnExit";
 			this.m_btnExit.Size = new System.Drawing.Size(75, 23);
 			this.m_btnExit.TabIndex = 25;
-			this.m_btnExit.Text = "&Exit";
+			this.m_btnExit.Text = "E&xit";
 			this.m_btnExit.UseVisualStyleBackColor = true;
 			this.m_btnExit.Click += new System.EventHandler(this.OnBtnExit);
 			// 
@@ -228,12 +218,11 @@
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "KeyPromptForm";
-			this.ShowInTaskbar = false;
 			this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Open Database";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -254,7 +243,6 @@
 		private System.Windows.Forms.ToolTip m_ttRect;
 		private System.Windows.Forms.Button m_btnHelp;
 		private System.Windows.Forms.Label m_lblSeparator;
-		private System.Windows.Forms.OpenFileDialog m_openKeyFileDialog;
 		private System.Windows.Forms.ComboBox m_cmbKeyFile;
 		private System.Windows.Forms.Timer m_timerKeyFileFiller;
 		private System.Windows.Forms.Button m_btnExit;

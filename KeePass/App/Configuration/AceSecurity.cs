@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,6 +51,17 @@ namespace KeePass.App.Configuration
 			}
 		}
 
+		private AceMasterPassword m_mp = new AceMasterPassword();
+		public AceMasterPassword MasterPassword
+		{
+			get { return m_mp; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_mp = value;
+			}
+		}
+
 		private bool m_bClipClearOnExit = true;
 		public bool ClipboardClearOnExit
 		{
@@ -63,6 +74,16 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_nClipClearSeconds; }
 			set { m_nClipClearSeconds = value; }
+		}
+
+		// Disabled by default, because Office's clipboard tools
+		// crash with the Clipboard Viewer Ignore format
+		// (when it is set using OleSetClipboard)
+		private bool m_bUseClipboardViewerIgnoreFmt = false;
+		public bool UseClipboardViewerIgnoreFormat
+		{
+			get { return m_bUseClipboardViewerIgnoreFmt; }
+			set { m_bUseClipboardViewerIgnoreFmt = value; }
 		}
 	}
 
@@ -91,6 +112,34 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_uLockAfterTime; }
 			set { m_uLockAfterTime = value; }
+		}
+
+		private bool m_bExitInsteadOfLockingAfterTime = false;
+		public bool ExitInsteadOfLockingAfterTime
+		{
+			get { return m_bExitInsteadOfLockingAfterTime; }
+			set { m_bExitInsteadOfLockingAfterTime = value; }
+		}
+	}
+
+	public sealed class AceMasterPassword
+	{
+		public AceMasterPassword()
+		{
+		}
+
+		private uint m_uMinLength = 0;
+		public uint MinimumLength
+		{
+			get { return m_uMinLength; }
+			set { m_uMinLength = value; }
+		}
+
+		private uint m_uMinQuality = 0;
+		public uint MinimumQuality
+		{
+			get { return m_uMinQuality; }
+			set { m_uMinQuality = value; }
 		}
 	}
 }

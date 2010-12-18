@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -70,6 +70,45 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_bannerStyle; }
 			set { m_bannerStyle = value; }
+		}
+
+		private bool m_bOptScreenReader = false;
+		public bool OptimizeForScreenReader
+		{
+			get { return m_bOptScreenReader; }
+			set { m_bOptScreenReader = value; }
+		}
+
+		private int m_deSizeW = AppDefs.InvalidWindowValue;
+		public int DataEditorWidth
+		{
+			get { return m_deSizeW; }
+			set { m_deSizeW = value; }
+		}
+
+		private int m_deSizeH = AppDefs.InvalidWindowValue;
+		public int DataEditorHeight
+		{
+			get { return m_deSizeH; }
+			set { m_deSizeH = value; }
+		}
+
+		private AceFont m_deFont = new AceFont();
+		public AceFont DataEditorFont
+		{
+			get { return m_deFont; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_deFont = value;
+			}
+		}
+
+		private bool m_bDeWordWrap = true;
+		public bool DataEditorWordWrap
+		{
+			get { return m_bDeWordWrap; }
+			set { m_bDeWordWrap = value; }
 		}
 	}
 

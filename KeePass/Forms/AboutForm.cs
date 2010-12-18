@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 using KeePass.App;
 using KeePass.UI;
@@ -66,12 +67,15 @@ namespace KeePass.Forms
 			m_lvComponents.Columns.Add(KPRes.Components, 100, HorizontalAlignment.Left);
 			m_lvComponents.Columns.Add(KPRes.Version, 100, HorizontalAlignment.Left);
 
-			GetAppComponents();
+			try { GetAppComponents(); }
+			catch(Exception) { Debug.Assert(false); }
 
 			int nWidth = m_lvComponents.ClientRectangle.Width / 2;
 			int nMod = m_lvComponents.ClientRectangle.Width % 2;
 			m_lvComponents.Columns[0].Width = nWidth;
 			m_lvComponents.Columns[1].Width = nWidth + nMod;
+
+			UIUtil.SetExplorerTheme(m_lvComponents.Handle);
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
@@ -86,17 +90,19 @@ namespace KeePass.Forms
 				lvi.SubItems.Add(KPRes.NotInstalled);
 			else lvi.SubItems.Add(Kdb3Manager.KeePassVersionString + " (0x" +
 				Kdb3Manager.LibraryBuild.ToString("X4") + ")");
+
 			m_lvComponents.Items.Add(lvi);
 
-			lvi = new ListViewItem(KPRes.XSLStylesheets);
+			lvi = new ListViewItem(KPRes.XslStylesheets);
 			string strPath = WinUtil.GetExecutable();
-			strPath = UrlUtil.GetFileDirectory(strPath, true);
+			strPath = UrlUtil.GetFileDirectory(strPath, true, false);
 			bool bInstalled = File.Exists(strPath + AppDefs.XslFileHtmlLite);
 			bInstalled &= File.Exists(strPath + AppDefs.XslFileHtmlFull);
 			bInstalled &= File.Exists(strPath + AppDefs.XslFileHtmlTabular);
 
 			if(!bInstalled) lvi.SubItems.Add(KPRes.NotInstalled);
 			else lvi.SubItems.Add(PwDefs.VersionString);
+
 			m_lvComponents.Items.Add(lvi);
 		}
 

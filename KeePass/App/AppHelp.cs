@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ namespace KeePass.App
 			string strCmd = @"ms-its:" + m_strLocalHelpFile;
 
 			if(strTopic != null)
-				strCmd += @"::/help/" + strTopic + @".html";
+				strCmd += @"::/help/" + strTopic + ".html";
 
 			if(strSection != null)
 			{
@@ -124,7 +124,7 @@ namespace KeePass.App
 				strCmd += @"#" + strSection;
 			}
 
-			try { Process.Start(@"hh.exe", strCmd); }
+			try { Process.Start("hh.exe", strCmd); }
 			catch(Exception exStart)
 			{
 				MessageService.ShowWarning(@"hh.exe " + strCmd, exStart);
@@ -135,7 +135,7 @@ namespace KeePass.App
 		{
 			string strCmd = PwDefs.HelpUrl;
 
-			if(strTopic != null) strCmd += strTopic + @".html";
+			if(strTopic != null) strCmd += strTopic + ".html";
 			if(strSection != null)
 			{
 				Debug.Assert(strTopic != null); // Topic must be present for section
@@ -145,7 +145,7 @@ namespace KeePass.App
 			try
 			{
 				ParameterizedThreadStart pts = new ParameterizedThreadStart(AppHelp.RunCommandAsync);
-				Thread th = new Thread(pts);
+				Thread th = new Thread(pts); // Local, but thread will continue to run anyway
 				th.Start(strCmd);
 			}
 			catch(Exception exThread)
@@ -159,7 +159,7 @@ namespace KeePass.App
 			Debug.Assert(pData != null);
 			if(pData == null) throw new ArgumentNullException("pData");
 
-			string strCommand = pData as string;
+			string strCommand = (pData as string);
 			Debug.Assert(strCommand != null);
 			if(strCommand == null) throw new ArgumentException();
 

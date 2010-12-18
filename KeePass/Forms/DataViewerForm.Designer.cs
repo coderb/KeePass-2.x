@@ -31,7 +31,7 @@
 			this.m_rtbText = new System.Windows.Forms.RichTextBox();
 			this.m_picBox = new System.Windows.Forms.PictureBox();
 			this.m_webBrowser = new System.Windows.Forms.WebBrowser();
-			this.m_toolMain = new System.Windows.Forms.ToolStrip();
+			this.m_toolMain = new KeePass.UI.CustomToolStripEx();
 			this.m_tslViewer = new System.Windows.Forms.ToolStripLabel();
 			this.m_tscViewers = new System.Windows.Forms.ToolStripComboBox();
 			this.m_tssSeparator0 = new System.Windows.Forms.ToolStripSeparator();
@@ -90,14 +90,14 @@
 			// m_tslViewer
 			// 
 			this.m_tslViewer.Name = "m_tslViewer";
-			this.m_tslViewer.Size = new System.Drawing.Size(48, 22);
-			this.m_tslViewer.Text = "Show in:";
+			this.m_tslViewer.Size = new System.Drawing.Size(19, 22);
+			this.m_tslViewer.Text = "<>";
 			// 
 			// m_tscViewers
 			// 
 			this.m_tscViewers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.m_tscViewers.Name = "m_tscViewers";
-			this.m_tscViewers.Size = new System.Drawing.Size(121, 25);
+			this.m_tscViewers.Size = new System.Drawing.Size(140, 25);
 			this.m_tscViewers.SelectedIndexChanged += new System.EventHandler(this.OnViewersSelectedIndexChanged);
 			// 
 			// m_tssSeparator0
@@ -108,8 +108,8 @@
 			// m_tslEncoding
 			// 
 			this.m_tslEncoding.Name = "m_tslEncoding";
-			this.m_tslEncoding.Size = new System.Drawing.Size(55, 22);
-			this.m_tslEncoding.Text = "Encoding:";
+			this.m_tslEncoding.Size = new System.Drawing.Size(19, 22);
+			this.m_tslEncoding.Text = "<>";
 			// 
 			// m_tscEncoding
 			// 
@@ -177,7 +177,7 @@
 		private System.Windows.Forms.RichTextBox m_rtbText;
 		private System.Windows.Forms.PictureBox m_picBox;
 		private System.Windows.Forms.WebBrowser m_webBrowser;
-		private System.Windows.Forms.ToolStrip m_toolMain;
+		private KeePass.UI.CustomToolStripEx m_toolMain;
 		private System.Windows.Forms.ToolStripLabel m_tslViewer;
 		private System.Windows.Forms.ToolStripComboBox m_tscViewers;
 		private System.Windows.Forms.ToolStripSeparator m_tssSeparator0;

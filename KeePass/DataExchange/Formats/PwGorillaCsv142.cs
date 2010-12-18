@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,11 +32,14 @@ using KeePassLib.Security;
 
 namespace KeePass.DataExchange.Formats
 {
-	internal sealed class PwGorillaCsv142 : FormatImporter
+	internal sealed class PwGorillaCsv142 : FileFormatProvider
 	{
+		public override bool SupportsImport { get { return true; } }
+		public override bool SupportsExport { get { return false; } }
+
 		public override string FormatName { get { return "Password Gorilla CSV 1.42"; } }
 		public override string DefaultExtension { get { return "csv"; } }
-		public override string AppGroup { get { return KPRes.PasswordManagers; } }
+		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
 
 		public override Image SmallIcon
 		{
@@ -58,7 +61,7 @@ namespace KeePass.DataExchange.Formats
 
 				string[] vParts = strLine.Split(new char[]{ 'µ' });
 
-				PwEntry pe = new PwEntry(null, true, true);
+				PwEntry pe = new PwEntry(true, true);
 				PwGroup pgContainer = pwStorage.RootGroup;
 
 				string strNotes = string.Empty;
@@ -92,8 +95,7 @@ namespace KeePass.DataExchange.Formats
 				pe.Strings.Set(PwDefs.NotesField, new ProtectedString(
 					pwStorage.MemoryProtection.ProtectNotes, strNotes));
 
-				pe.ParentGroup = pgContainer;
-				pgContainer.Entries.Add(pe);
+				pgContainer.AddEntry(pe, true);
 			}
 		}
 	}

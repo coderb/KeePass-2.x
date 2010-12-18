@@ -33,7 +33,7 @@
 			this.m_btnCancel = new System.Windows.Forms.Button();
 			this.m_tabMain = new System.Windows.Forms.TabControl();
 			this.m_tabSecurity = new System.Windows.Forms.TabPage();
-			this.m_lvSecurityOptions = new System.Windows.Forms.ListView();
+			this.m_lvSecurityOptions = new KeePass.UI.CustomListViewEx();
 			this.m_numClipClearTime = new System.Windows.Forms.NumericUpDown();
 			this.m_cbClipClearTime = new System.Windows.Forms.CheckBox();
 			this.m_numDefaultExpireDays = new System.Windows.Forms.NumericUpDown();
@@ -41,14 +41,16 @@
 			this.m_cbLockAfterTime = new System.Windows.Forms.CheckBox();
 			this.m_numLockAfterTime = new System.Windows.Forms.NumericUpDown();
 			this.m_tabPolicy = new System.Windows.Forms.TabPage();
-			this.m_lvPolicy = new System.Windows.Forms.ListView();
+			this.m_lvPolicy = new KeePass.UI.CustomListViewEx();
 			this.m_linkPolicyInfo = new System.Windows.Forms.LinkLabel();
 			this.m_lblPolicyMore = new System.Windows.Forms.Label();
 			this.m_lblPolicyRestart = new System.Windows.Forms.Label();
 			this.m_lblPolicyIntro = new System.Windows.Forms.Label();
 			this.m_tabGui = new System.Windows.Forms.TabPage();
+			this.m_numMruCount = new System.Windows.Forms.NumericUpDown();
+			this.m_lblMruCount = new System.Windows.Forms.Label();
 			this.m_btnSelFont = new System.Windows.Forms.Button();
-			this.m_lvGuiOptions = new System.Windows.Forms.ListView();
+			this.m_lvGuiOptions = new KeePass.UI.CustomListViewEx();
 			this.m_lblBannerStyle = new System.Windows.Forms.Label();
 			this.m_cmbBannerStyle = new System.Windows.Forms.ComboBox();
 			this.m_tabIntegration = new System.Windows.Forms.TabPage();
@@ -66,7 +68,8 @@
 			this.m_lblRestoreHotKey = new System.Windows.Forms.Label();
 			this.m_tbGlobalAutoType = new System.Windows.Forms.TextBox();
 			this.m_tabAdvanced = new System.Windows.Forms.TabPage();
-			this.m_lvAdvanced = new System.Windows.Forms.ListView();
+			this.m_btnTriggers = new System.Windows.Forms.Button();
+			this.m_lvAdvanced = new KeePass.UI.CustomListViewEx();
 			this.m_fontLists = new System.Windows.Forms.FontDialog();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
 			this.m_tabMain.SuspendLayout();
@@ -76,6 +79,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.m_numLockAfterTime)).BeginInit();
 			this.m_tabPolicy.SuspendLayout();
 			this.m_tabGui.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.m_numMruCount)).BeginInit();
 			this.m_tabIntegration.SuspendLayout();
 			this.m_grpFileExt.SuspendLayout();
 			this.m_grpHotKeys.SuspendLayout();
@@ -159,7 +163,7 @@
 			// 
 			// m_numClipClearTime
 			// 
-			this.m_numClipClearTime.Location = new System.Drawing.Point(327, 57);
+			this.m_numClipClearTime.Location = new System.Drawing.Point(327, 34);
 			this.m_numClipClearTime.Maximum = new decimal(new int[] {
             1209600,
             0,
@@ -167,22 +171,22 @@
             0});
 			this.m_numClipClearTime.Name = "m_numClipClearTime";
 			this.m_numClipClearTime.Size = new System.Drawing.Size(66, 20);
-			this.m_numClipClearTime.TabIndex = 5;
+			this.m_numClipClearTime.TabIndex = 3;
 			// 
 			// m_cbClipClearTime
 			// 
 			this.m_cbClipClearTime.AutoSize = true;
-			this.m_cbClipClearTime.Location = new System.Drawing.Point(6, 58);
+			this.m_cbClipClearTime.Location = new System.Drawing.Point(6, 35);
 			this.m_cbClipClearTime.Name = "m_cbClipClearTime";
 			this.m_cbClipClearTime.Size = new System.Drawing.Size(194, 17);
-			this.m_cbClipClearTime.TabIndex = 4;
+			this.m_cbClipClearTime.TabIndex = 2;
 			this.m_cbClipClearTime.Text = "Clipboard auto-clear time (seconds):";
 			this.m_cbClipClearTime.UseVisualStyleBackColor = true;
 			this.m_cbClipClearTime.CheckedChanged += new System.EventHandler(this.OnClipboardClearTimeCheckedChanged);
 			// 
 			// m_numDefaultExpireDays
 			// 
-			this.m_numDefaultExpireDays.Location = new System.Drawing.Point(327, 34);
+			this.m_numDefaultExpireDays.Location = new System.Drawing.Point(327, 57);
 			this.m_numDefaultExpireDays.Maximum = new decimal(new int[] {
             2920,
             0,
@@ -190,15 +194,15 @@
             0});
 			this.m_numDefaultExpireDays.Name = "m_numDefaultExpireDays";
 			this.m_numDefaultExpireDays.Size = new System.Drawing.Size(66, 20);
-			this.m_numDefaultExpireDays.TabIndex = 3;
+			this.m_numDefaultExpireDays.TabIndex = 5;
 			// 
 			// m_cbDefaultExpireDays
 			// 
 			this.m_cbDefaultExpireDays.AutoSize = true;
-			this.m_cbDefaultExpireDays.Location = new System.Drawing.Point(6, 35);
+			this.m_cbDefaultExpireDays.Location = new System.Drawing.Point(6, 58);
 			this.m_cbDefaultExpireDays.Name = "m_cbDefaultExpireDays";
 			this.m_cbDefaultExpireDays.Size = new System.Drawing.Size(315, 17);
-			this.m_cbDefaultExpireDays.TabIndex = 2;
+			this.m_cbDefaultExpireDays.TabIndex = 4;
 			this.m_cbDefaultExpireDays.Text = "By default, new entries expire in the following number of days:";
 			this.m_cbDefaultExpireDays.UseVisualStyleBackColor = true;
 			this.m_cbDefaultExpireDays.CheckedChanged += new System.EventHandler(this.OnDefaultExpireDaysCheckedChanged);
@@ -279,9 +283,9 @@
 			this.m_lblPolicyRestart.AutoSize = true;
 			this.m_lblPolicyRestart.Location = new System.Drawing.Point(3, 289);
 			this.m_lblPolicyRestart.Name = "m_lblPolicyRestart";
-			this.m_lblPolicyRestart.Size = new System.Drawing.Size(234, 13);
+			this.m_lblPolicyRestart.Size = new System.Drawing.Size(238, 13);
 			this.m_lblPolicyRestart.TabIndex = 7;
-			this.m_lblPolicyRestart.Text = "Changing the policy requires restarting KeePass.";
+			this.m_lblPolicyRestart.Text = "*Changing the policy requires restarting KeePass.";
 			// 
 			// m_lblPolicyIntro
 			// 
@@ -294,6 +298,8 @@
 			// 
 			// m_tabGui
 			// 
+			this.m_tabGui.Controls.Add(this.m_numMruCount);
+			this.m_tabGui.Controls.Add(this.m_lblMruCount);
 			this.m_tabGui.Controls.Add(this.m_btnSelFont);
 			this.m_tabGui.Controls.Add(this.m_lvGuiOptions);
 			this.m_tabGui.Controls.Add(this.m_lblBannerStyle);
@@ -305,9 +311,31 @@
 			this.m_tabGui.Text = "Interface";
 			this.m_tabGui.UseVisualStyleBackColor = true;
 			// 
+			// m_numMruCount
+			// 
+			this.m_numMruCount.Location = new System.Drawing.Point(163, 276);
+			this.m_numMruCount.Maximum = new decimal(new int[] {
+            120,
+            0,
+            0,
+            0});
+			this.m_numMruCount.Name = "m_numMruCount";
+			this.m_numMruCount.Size = new System.Drawing.Size(53, 20);
+			this.m_numMruCount.TabIndex = 5;
+			this.m_numMruCount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+			// 
+			// m_lblMruCount
+			// 
+			this.m_lblMruCount.AutoSize = true;
+			this.m_lblMruCount.Location = new System.Drawing.Point(9, 278);
+			this.m_lblMruCount.Name = "m_lblMruCount";
+			this.m_lblMruCount.Size = new System.Drawing.Size(148, 13);
+			this.m_lblMruCount.TabIndex = 4;
+			this.m_lblMruCount.Text = "Remember recently used files:";
+			// 
 			// m_btnSelFont
 			// 
-			this.m_btnSelFont.Location = new System.Drawing.Point(12, 270);
+			this.m_btnSelFont.Location = new System.Drawing.Point(436, 241);
 			this.m_btnSelFont.Name = "m_btnSelFont";
 			this.m_btnSelFont.Size = new System.Drawing.Size(105, 23);
 			this.m_btnSelFont.TabIndex = 3;
@@ -333,23 +361,17 @@
 			this.m_lblBannerStyle.AutoSize = true;
 			this.m_lblBannerStyle.Location = new System.Drawing.Point(9, 246);
 			this.m_lblBannerStyle.Name = "m_lblBannerStyle";
-			this.m_lblBannerStyle.Size = new System.Drawing.Size(103, 13);
+			this.m_lblBannerStyle.Size = new System.Drawing.Size(100, 13);
 			this.m_lblBannerStyle.TabIndex = 1;
-			this.m_lblBannerStyle.Text = "Dialog Banner Style:";
+			this.m_lblBannerStyle.Text = "Dialog banner style:";
 			// 
 			// m_cmbBannerStyle
 			// 
 			this.m_cmbBannerStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.m_cmbBannerStyle.FormattingEnabled = true;
-			this.m_cmbBannerStyle.Items.AddRange(new object[] {
-            "(Current)",
-            "WinXP Login",
-            "WinVista Black",
-            "KeePass Win32",
-            "Blue Carbon"});
-			this.m_cmbBannerStyle.Location = new System.Drawing.Point(118, 243);
+			this.m_cmbBannerStyle.Location = new System.Drawing.Point(163, 243);
 			this.m_cmbBannerStyle.Name = "m_cmbBannerStyle";
-			this.m_cmbBannerStyle.Size = new System.Drawing.Size(148, 21);
+			this.m_cmbBannerStyle.Size = new System.Drawing.Size(193, 21);
 			this.m_cmbBannerStyle.TabIndex = 2;
 			this.m_cmbBannerStyle.SelectedValueChanged += new System.EventHandler(this.OnBannerStyleSelectedChanged);
 			// 
@@ -370,7 +392,7 @@
 			// 
 			// m_tbUrlOverride
 			// 
-			this.m_tbUrlOverride.Location = new System.Drawing.Point(139, 240);
+			this.m_tbUrlOverride.Location = new System.Drawing.Point(139, 241);
 			this.m_tbUrlOverride.Name = "m_tbUrlOverride";
 			this.m_tbUrlOverride.Size = new System.Drawing.Size(406, 20);
 			this.m_tbUrlOverride.TabIndex = 5;
@@ -378,7 +400,7 @@
 			// m_cbUrlOverride
 			// 
 			this.m_cbUrlOverride.AutoSize = true;
-			this.m_cbUrlOverride.Location = new System.Drawing.Point(12, 242);
+			this.m_cbUrlOverride.Location = new System.Drawing.Point(12, 243);
 			this.m_cbUrlOverride.Name = "m_cbUrlOverride";
 			this.m_cbUrlOverride.Size = new System.Drawing.Size(112, 17);
 			this.m_cbUrlOverride.TabIndex = 4;
@@ -421,25 +443,23 @@
 			// 
 			// m_btnFileExtRemove
 			// 
-			this.m_btnFileExtRemove.Image = global::KeePass.Properties.Resources.B16x16_EditDelete;
+			this.m_btnFileExtRemove.FlatStyle = System.Windows.Forms.FlatStyle.System;
 			this.m_btnFileExtRemove.Location = new System.Drawing.Point(151, 51);
 			this.m_btnFileExtRemove.Name = "m_btnFileExtRemove";
 			this.m_btnFileExtRemove.Size = new System.Drawing.Size(135, 23);
 			this.m_btnFileExtRemove.TabIndex = 2;
 			this.m_btnFileExtRemove.Text = "&Remove Association";
-			this.m_btnFileExtRemove.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
 			this.m_btnFileExtRemove.UseVisualStyleBackColor = true;
 			this.m_btnFileExtRemove.Click += new System.EventHandler(this.OnBtnFileExtRemove);
 			// 
 			// m_btnFileExtCreate
 			// 
-			this.m_btnFileExtCreate.Image = global::KeePass.Properties.Resources.B16x16_FileNew;
+			this.m_btnFileExtCreate.FlatStyle = System.Windows.Forms.FlatStyle.System;
 			this.m_btnFileExtCreate.Location = new System.Drawing.Point(10, 51);
 			this.m_btnFileExtCreate.Name = "m_btnFileExtCreate";
 			this.m_btnFileExtCreate.Size = new System.Drawing.Size(131, 23);
 			this.m_btnFileExtCreate.TabIndex = 1;
 			this.m_btnFileExtCreate.Text = "Create &Association";
-			this.m_btnFileExtCreate.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
 			this.m_btnFileExtCreate.UseVisualStyleBackColor = true;
 			this.m_btnFileExtCreate.Click += new System.EventHandler(this.OnBtnFileExtCreate);
 			// 
@@ -499,6 +519,7 @@
 			// 
 			// m_tabAdvanced
 			// 
+			this.m_tabAdvanced.Controls.Add(this.m_btnTriggers);
 			this.m_tabAdvanced.Controls.Add(this.m_lvAdvanced);
 			this.m_tabAdvanced.Location = new System.Drawing.Point(4, 22);
 			this.m_tabAdvanced.Name = "m_tabAdvanced";
@@ -508,6 +529,18 @@
 			this.m_tabAdvanced.Text = "Advanced";
 			this.m_tabAdvanced.UseVisualStyleBackColor = true;
 			// 
+			// m_btnTriggers
+			// 
+			this.m_btnTriggers.Image = global::KeePass.Properties.Resources.B16x16_Make_KDevelop;
+			this.m_btnTriggers.Location = new System.Drawing.Point(459, 282);
+			this.m_btnTriggers.Name = "m_btnTriggers";
+			this.m_btnTriggers.Size = new System.Drawing.Size(89, 23);
+			this.m_btnTriggers.TabIndex = 1;
+			this.m_btnTriggers.Text = "&Triggers...";
+			this.m_btnTriggers.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+			this.m_btnTriggers.UseVisualStyleBackColor = true;
+			this.m_btnTriggers.Click += new System.EventHandler(this.OnBtnTriggers);
+			// 
 			// m_lvAdvanced
 			// 
 			this.m_lvAdvanced.CheckBoxes = true;
@@ -516,7 +549,7 @@
 			this.m_lvAdvanced.Location = new System.Drawing.Point(6, 6);
 			this.m_lvAdvanced.Name = "m_lvAdvanced";
 			this.m_lvAdvanced.ShowItemToolTips = true;
-			this.m_lvAdvanced.Size = new System.Drawing.Size(542, 299);
+			this.m_lvAdvanced.Size = new System.Drawing.Size(542, 270);
 			this.m_lvAdvanced.TabIndex = 0;
 			this.m_lvAdvanced.UseCompatibleStateImageBehavior = false;
 			this.m_lvAdvanced.View = System.Windows.Forms.View.Details;
@@ -544,8 +577,8 @@
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Options";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.m_tabMain.ResumeLayout(false);
 			this.m_tabSecurity.ResumeLayout(false);
@@ -557,6 +590,7 @@
 			this.m_tabPolicy.PerformLayout();
 			this.m_tabGui.ResumeLayout(false);
 			this.m_tabGui.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.m_numMruCount)).EndInit();
 			this.m_tabIntegration.ResumeLayout(false);
 			this.m_tabIntegration.PerformLayout();
 			this.m_grpFileExt.ResumeLayout(false);
@@ -585,8 +619,8 @@
 		private System.Windows.Forms.Label m_lblPolicyMore;
 		private System.Windows.Forms.Label m_lblPolicyRestart;
 		private System.Windows.Forms.Label m_lblPolicyIntro;
-		private System.Windows.Forms.ListView m_lvPolicy;
-		private System.Windows.Forms.ListView m_lvGuiOptions;
+		private KeePass.UI.CustomListViewEx m_lvPolicy;
+		private KeePass.UI.CustomListViewEx m_lvGuiOptions;
 		private System.Windows.Forms.FontDialog m_fontLists;
 		private System.Windows.Forms.Button m_btnSelFont;
 		private System.Windows.Forms.TabPage m_tabIntegration;
@@ -605,9 +639,12 @@
 		private System.Windows.Forms.Label m_lblFileExtHint;
 		private System.Windows.Forms.CheckBox m_cbAutoRun;
 		private System.Windows.Forms.CheckBox m_cbSingleClickTrayAction;
-		private System.Windows.Forms.ListView m_lvAdvanced;
+		private KeePass.UI.CustomListViewEx m_lvAdvanced;
 		private System.Windows.Forms.TextBox m_tbUrlOverride;
 		private System.Windows.Forms.CheckBox m_cbUrlOverride;
-		private System.Windows.Forms.ListView m_lvSecurityOptions;
+		private KeePass.UI.CustomListViewEx m_lvSecurityOptions;
+		private System.Windows.Forms.Button m_btnTriggers;
+		private System.Windows.Forms.NumericUpDown m_numMruCount;
+		private System.Windows.Forms.Label m_lblMruCount;
 	}
 }

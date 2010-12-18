@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ namespace KeePassLib
 			get { return m_uuid; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 				m_uuid = value;
 			}
@@ -79,7 +79,9 @@ namespace KeePassLib
 		public PwGroup ParentGroup
 		{
 			get { return m_pParentGroup; }
-			set { m_pParentGroup = value; }
+
+			/// Plugins: use PwGroup.AddEntry instead.
+			internal set { m_pParentGroup = value; }
 		}
 
 		/// <summary>
@@ -90,7 +92,7 @@ namespace KeePassLib
 			get { return m_listStrings; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 				
 				m_listStrings = value;
 			}
@@ -104,7 +106,7 @@ namespace KeePassLib
 			get { return m_listBinaries; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 				
 				m_listBinaries = value;
 			}
@@ -118,7 +120,7 @@ namespace KeePassLib
 			get { return m_listAutoType; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 				
 				m_listAutoType = value;
 			}
@@ -132,7 +134,7 @@ namespace KeePassLib
 			get { return m_listHistory; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 				m_listHistory = value;
 			}
@@ -141,7 +143,7 @@ namespace KeePassLib
 		/// <summary>
 		/// Image ID specifying the icon that will be used for this entry.
 		/// </summary>
-		public PwIcon IconID
+		public PwIcon IconId
 		{
 			get { return m_pwIcon; }
 			set { m_pwIcon = value; }
@@ -157,7 +159,7 @@ namespace KeePassLib
 			get { return m_pwCustomIconID; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException();
+				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
 
 				m_pwCustomIconID = value;
 			}
@@ -255,19 +257,41 @@ namespace KeePassLib
 		/// Construct a new, empty password entry. Member variables will be initialized
 		/// to their default values.
 		/// </summary>
-		/// <param name="pwParentGroup">Reference to the containing group, this
-		/// parameter may be <c>null</c> and set later manually.</param>
-		/// <param name="bCreateNewUUID">If <c>true</c>, a new UUID will be created
+		/// <param name="bCreateNewUuid">If <c>true</c>, a new UUID will be created
 		/// for this entry. If <c>false</c>, the UUID is zero and you must set it
 		/// manually later.</param>
 		/// <param name="bSetTimes">If <c>true</c>, the creation, last modification
 		/// and last access times will be set to the current system time. The expire
 		/// time is set to never (<c>DtInfinity</c>).</param>
-		public PwEntry(PwGroup pwParentGroup, bool bCreateNewUUID, bool bSetTimes)
+		public PwEntry(bool bCreateNewUuid, bool bSetTimes)
+		{
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
+
+			if(bSetTimes)
+			{
+				m_tCreation = m_tLastMod = m_tLastAccess = DateTime.Now;
+				// m_tExpire == PwDefs.DtInfinity
+			}
+		}
+
+		/// <summary>
+		/// Construct a new, empty password entry. Member variables will be initialized
+		/// to their default values.
+		/// </summary>
+		/// <param name="pwParentGroup">Reference to the containing group, this
+		/// parameter may be <c>null</c> and set later manually.</param>
+		/// <param name="bCreateNewUuid">If <c>true</c>, a new UUID will be created
+		/// for this entry. If <c>false</c>, the UUID is zero and you must set it
+		/// manually later.</param>
+		/// <param name="bSetTimes">If <c>true</c>, the creation, last modification
+		/// and last access times will be set to the current system time. The expire
+		/// time is set to never (<c>DtInfinity</c>).</param>
+		[Obsolete("Use a different constructor. To add an entry to a group, use AddEntry of PwGroup.")]
+		public PwEntry(PwGroup pwParentGroup, bool bCreateNewUuid, bool bSetTimes)
 		{
 			m_pParentGroup = pwParentGroup;
 
-			if(bCreateNewUUID) m_uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -284,31 +308,75 @@ namespace KeePassLib
 		/// <returns>Exact value clone. All references to mutable values changed.</returns>
 		public PwEntry CloneDeep()
 		{
-			PwEntry peNew = new PwEntry(this.m_pParentGroup, false, false);
+			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.m_uuid = this.m_uuid; // PwUUID is immutable
+			peNew.m_pParentGroup = m_pParentGroup;
+			peNew.m_uuid = m_uuid; // PwUuid is immutable
 
-			peNew.m_listStrings = this.m_listStrings.CloneDeep();
-			peNew.m_listBinaries = this.m_listBinaries.CloneDeep();
-			peNew.m_listAutoType = this.m_listAutoType.CloneDeep();
-			peNew.m_listHistory = this.m_listHistory.CloneDeep();
+			peNew.m_listStrings = m_listStrings.CloneDeep();
+			peNew.m_listBinaries = m_listBinaries.CloneDeep();
+			peNew.m_listAutoType = m_listAutoType.CloneDeep();
+			peNew.m_listHistory = m_listHistory.CloneDeep();
 
-			peNew.m_pwIcon = this.m_pwIcon;
-			peNew.m_pwCustomIconID = this.m_pwCustomIconID;
+			peNew.m_pwIcon = m_pwIcon;
+			peNew.m_pwCustomIconID = m_pwCustomIconID;
 
-			peNew.m_clrForeground = this.m_clrForeground;
-			peNew.m_clrBackground = this.m_clrBackground;
+			peNew.m_clrForeground = m_clrForeground;
+			peNew.m_clrBackground = m_clrBackground;
 
-			peNew.m_tCreation = this.m_tCreation;
-			peNew.m_tLastMod = this.m_tLastMod;
-			peNew.m_tLastAccess = this.m_tLastAccess;
-			peNew.m_tExpire = this.m_tExpire;
-			peNew.m_bExpires = this.m_bExpires;
-			peNew.m_uUsageCount = this.m_uUsageCount;
+			peNew.m_tCreation = m_tCreation;
+			peNew.m_tLastMod = m_tLastMod;
+			peNew.m_tLastAccess = m_tLastAccess;
+			peNew.m_tExpire = m_tExpire;
+			peNew.m_bExpires = m_bExpires;
+			peNew.m_uUsageCount = m_uUsageCount;
 
-			peNew.m_strOverrideUrl = this.m_strOverrideUrl;
+			peNew.m_strOverrideUrl = m_strOverrideUrl;
 
 			return peNew;
+		}
+
+		/// <summary>
+		/// Assign properties to the current entry based on a template entry.
+		/// </summary>
+		/// <param name="peTemplate">Template entry. Must not be <c>null</c>.</param>
+		/// <param name="bOnlyIfNewer">Only set the properties of the template entry
+		/// if it is newer than the current one.</param>
+		/// <param name="bIncludeHistory">If <c>true</c>, the history will be
+		/// copied, too.</param>
+		public void AssignProperties(PwEntry peTemplate, bool bOnlyIfNewer,
+			bool bIncludeHistory)
+		{
+			Debug.Assert(peTemplate != null); if(peTemplate == null) throw new ArgumentNullException("peTemplate");
+
+			// Template UUID should be the same as the current one
+			Debug.Assert(m_uuid.EqualsValue(peTemplate.m_uuid));
+			m_uuid = peTemplate.m_uuid;
+
+			if(bOnlyIfNewer)
+			{
+				if(peTemplate.m_tLastMod < m_tLastMod) return;
+			}
+
+			m_listStrings = peTemplate.m_listStrings;
+			m_listBinaries = peTemplate.m_listBinaries;
+			m_listAutoType = peTemplate.m_listAutoType;
+			if(bIncludeHistory) m_listHistory = peTemplate.m_listHistory;
+
+			m_pwIcon = peTemplate.m_pwIcon;
+			m_pwCustomIconID = peTemplate.m_pwCustomIconID;
+
+			m_clrForeground = peTemplate.m_clrForeground;
+			m_clrBackground = peTemplate.m_clrBackground;
+
+			m_tCreation = peTemplate.m_tCreation;
+			m_tLastMod = peTemplate.m_tLastMod;
+			m_tLastAccess = peTemplate.m_tLastAccess;
+			m_tExpire = peTemplate.m_tExpire;
+			m_bExpires = peTemplate.m_bExpires;
+			m_uUsageCount = peTemplate.m_uUsageCount;
+
+			m_strOverrideUrl = peTemplate.m_strOverrideUrl;
 		}
 
 		/// <summary>
@@ -319,12 +387,26 @@ namespace KeePassLib
 		/// <param name="bModified">Modify last modification time.</param>
 		public void Touch(bool bModified)
 		{
+			Touch(bModified, true);
+		}
+
+		/// <summary>
+		/// Touch the entry. This function updates the internal last access
+		/// time. If the <paramref name="bModified" /> parameter is <c>true</c>,
+		/// the last modification time gets updated, too.
+		/// </summary>
+		/// <param name="bModified">Modify last modification time.</param>
+		/// <param name="bTouchParents">If <c>true</c>, all parent objects
+		/// get touched, too.</param>
+		public void Touch(bool bModified, bool bTouchParents)
+		{
 			m_tLastAccess = DateTime.Now;
-			m_uUsageCount++;
+			++m_uUsageCount;
 
 			if(bModified) m_tLastMod = m_tLastAccess;
 
-			if(m_pParentGroup != null) m_pParentGroup.Touch(bModified);
+			if(bTouchParents && (m_pParentGroup != null))
+				m_pParentGroup.Touch(bModified, true);
 		}
 
 		/// <summary>
@@ -357,48 +439,22 @@ namespace KeePassLib
 			AssignProperties(pe, false, false);
 		}
 
-		/// <summary>
-		/// Assign properties to the current entry based on a template entry.
-		/// </summary>
-		/// <param name="peTemplate">Template entry. Must not be <c>null</c>.</param>
-		/// <param name="bOnlyIfNewer">Only set the properties of the template entry
-		/// if it is newer than the current one.</param>
-		/// <param name="bIncludeHistory">If <c>true</c>, the history will be
-		/// copied, too.</param>
-		public void AssignProperties(PwEntry peTemplate, bool bOnlyIfNewer,
-			bool bIncludeHistory)
+		public bool GetAutoTypeEnabled()
 		{
-			Debug.Assert(peTemplate != null); if(peTemplate == null) throw new ArgumentNullException();
+			if(m_listAutoType.Enabled == false) return false;
 
-			// Template UUID should be the same as the current one
-			Debug.Assert(m_uuid.EqualsValue(peTemplate.m_uuid));
-			m_uuid = peTemplate.m_uuid;
+			if(m_pParentGroup != null)
+				return m_pParentGroup.GetAutoTypeEnabledInherited();
 
-			if(bOnlyIfNewer)
-			{
-				if(peTemplate.m_tLastMod < this.m_tLastMod) return;
-			}
+			return PwGroup.DefaultAutoTypeEnabled;
+		}
 
-			m_listStrings = peTemplate.m_listStrings;
-			m_listBinaries = peTemplate.m_listBinaries;
-			m_listAutoType = peTemplate.m_listAutoType;
+		public bool GetSearchingEnabled()
+		{
+			if(m_pParentGroup != null)
+				return m_pParentGroup.GetSearchingEnabledInherited();
 
-			if(bIncludeHistory) m_listHistory = peTemplate.m_listHistory;
-
-			m_pwIcon = peTemplate.m_pwIcon;
-			m_pwCustomIconID = peTemplate.m_pwCustomIconID;
-
-			m_clrForeground = peTemplate.m_clrForeground;
-			m_clrBackground = peTemplate.m_clrBackground;
-
-			m_tCreation = peTemplate.m_tCreation;
-			m_tLastMod = peTemplate.m_tLastMod;
-			m_tLastAccess = peTemplate.m_tLastAccess;
-			m_tExpire = peTemplate.m_tExpire;
-			m_bExpires = peTemplate.m_bExpires;
-			m_uUsageCount = peTemplate.m_uUsageCount;
-
-			m_strOverrideUrl = peTemplate.m_strOverrideUrl;
+			return PwGroup.DefaultSearchingEnabled;
 		}
 	}
 }

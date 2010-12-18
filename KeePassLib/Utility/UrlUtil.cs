@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using KeePassLib.Native;
+
 namespace KeePassLib.Utility
 {
 	/// <summary>
@@ -31,7 +33,8 @@ namespace KeePassLib.Utility
 	/// </summary>
 	public static class UrlUtil
 	{
-		private static readonly char[] m_vDirSeps = new char[] { '\\', '/', Path.DirectorySeparatorChar };
+		private static readonly char[] m_vDirSeps = new char[] { '\\', '/',
+			Path.DirectorySeparatorChar };
 
 		/// <summary>
 		/// Get the directory (path) of a file name. The returned string is
@@ -42,15 +45,25 @@ namespace KeePassLib.Utility
 		/// <param name="strFile">Full path of a file.</param>
 		/// <param name="bAppendTerminatingChar">Append a terminating directory separator
 		/// character to the returned path.</param>
+		/// <param name="bEnsureValidDirSpec">If <c>true</c>, the returned path
+		/// is guaranteed to be a valid directory path (for example <c>X:\\</c> instead
+		/// of <c>X:</c>, overriding <paramref name="bAppendTerminatingChar" />).
+		/// This should only be set to <c>true</c>, if the returned path is directly
+		/// passed to some directory API.</param>
 		/// <returns>Directory of the file. The return value is an empty string
 		/// (<c>""</c>) if the input parameter is <c>null</c>.</returns>
-		public static string GetFileDirectory(string strFile, bool bAppendTerminatingChar)
+		public static string GetFileDirectory(string strFile, bool bAppendTerminatingChar,
+			bool bEnsureValidDirSpec)
 		{
 			Debug.Assert(strFile != null);
 			if(strFile == null) throw new ArgumentNullException("strFile");
 
 			int nLastSep = strFile.LastIndexOfAny(m_vDirSeps);
-			if(nLastSep <= 2) return strFile; // None or X:\\
+			if(nLastSep < 0) return strFile; // None
+
+			if(bEnsureValidDirSpec && (nLastSep == 2) && (strFile[1] == ':') &&
+				(strFile[2] == '\\')) // Length >= 3 and Windows root directory
+				bAppendTerminatingChar = true;
 
 			if(!bAppendTerminatingChar) return strFile.Substring(0, nLastSep);
 			return EnsureTerminatingSeparator(strFile.Substring(0, nLastSep), false);
@@ -66,7 +79,7 @@ namespace KeePassLib.Utility
 		/// an empty string (<c>""</c>) if the input parameter is <c>null</c>.</returns>
 		public static string GetFileName(string strPath)
 		{
-			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException();
+			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException("strPath");
 
 			int nLastSep = strPath.LastIndexOfAny(m_vDirSeps);
 
@@ -84,7 +97,7 @@ namespace KeePassLib.Utility
 		/// an empty string (<c>""</c>) if the input parameter is <c>null</c>.</returns>
 		public static string StripExtension(string strPath)
 		{
-			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException();
+			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException("strPath");
 
 			int nLastDirSep = strPath.LastIndexOfAny(m_vDirSeps);
 			int nLastExtDot = strPath.LastIndexOf('.');
@@ -101,7 +114,7 @@ namespace KeePassLib.Utility
 		/// <returns>Extension without prepending dot.</returns>
 		public static string GetExtension(string strPath)
 		{
-			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException();
+			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException("strPath");
 
 			int nLastDirSep = strPath.LastIndexOfAny(m_vDirSeps);
 			int nLastExtDot = strPath.LastIndexOf('.');
@@ -116,28 +129,29 @@ namespace KeePassLib.Utility
 		/// Ensure that a path is terminated with a directory separator character.
 		/// </summary>
 		/// <param name="strPath">Input path.</param>
-		/// <param name="bURL">If <c>true</c>, a slash (<c>/</c>) is appended to
+		/// <param name="bUrl">If <c>true</c>, a slash (<c>/</c>) is appended to
 		/// the string if it's not terminated already. If <c>false</c>, the
 		/// default system directory separator character is used.</param>
 		/// <returns>Path having a directory separator as last character.</returns>
-		public static string EnsureTerminatingSeparator(string strPath, bool bURL)
+		public static string EnsureTerminatingSeparator(string strPath, bool bUrl)
 		{
-			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException();
+			Debug.Assert(strPath != null); if(strPath == null) throw new ArgumentNullException("strPath");
 
 			int nLength = strPath.Length;
 			if(nLength <= 0) return string.Empty;
 
 			char chLast = strPath[nLength - 1];
 
-			for(int i = 0; i < m_vDirSeps.Length; i++)
-				if(chLast == m_vDirSeps[i])
-					return strPath;
+			for(int i = 0; i < m_vDirSeps.Length; ++i)
+			{
+				if(chLast == m_vDirSeps[i]) return strPath;
+			}
 
-			if(bURL) return strPath + '/';
+			if(bUrl) return (strPath + '/');
 			return strPath + Path.DirectorySeparatorChar;
 		}
 
-		/// <summary>
+		/* /// <summary>
 		/// File access mode enumeration. Used by the <c>FileAccessible</c>
 		/// method.
 		/// </summary>
@@ -155,9 +169,9 @@ namespace KeePassLib.Utility
 			/// file.
 			/// </summary>
 			Create
-		}
+		} */
 
-		/// <summary>
+		/* /// <summary>
 		/// Test if a specified path is accessible, either in read or write mode.
 		/// </summary>
 		/// <param name="strFilePath">Path to test.</param>
@@ -167,7 +181,7 @@ namespace KeePassLib.Utility
 		public static bool FileAccessible(string strFilePath, FileAccessMode fMode)
 		{
 			Debug.Assert(strFilePath != null);
-			if(strFilePath == null) throw new ArgumentNullException();
+			if(strFilePath == null) throw new ArgumentNullException("strFilePath");
 
 			if(fMode == FileAccessMode.Read)
 			{
@@ -193,7 +207,7 @@ namespace KeePassLib.Utility
 			}
 
 			return false;
-		}
+		} */
 
 		public static string GetQuotedAppPath(string strPath)
 		{
@@ -218,6 +232,150 @@ namespace KeePassLib.Utility
 			str = str.Replace('/', Path.DirectorySeparatorChar);
 
 			return str;
+		}
+
+		public static bool UnhideFile(string strFile)
+		{
+#if KeePassLibSD
+			return false;
+#else
+			if(strFile == null) throw new ArgumentNullException("strFile");
+
+			try
+			{
+				FileAttributes fa = File.GetAttributes(strFile);
+				if((long)(fa & FileAttributes.Hidden) == 0) return false;
+
+				return HideFile(strFile, false);
+			}
+			catch(Exception) { }
+
+			return false;
+#endif
+		}
+
+		public static bool HideFile(string strFile, bool bHide)
+		{
+#if KeePassLibSD
+			return false;
+#else
+			if(strFile == null) throw new ArgumentNullException("strFile");
+
+			try
+			{
+				FileAttributes fa = File.GetAttributes(strFile);
+
+				if(bHide) fa = ((fa & ~FileAttributes.Normal) | FileAttributes.Hidden);
+				else // Unhide
+				{
+					fa &= ~FileAttributes.Hidden;
+					if((long)fa == 0) fa |= FileAttributes.Normal;
+				}
+
+				File.SetAttributes(strFile, fa);
+				return true;
+			}
+			catch(Exception) { }
+
+			return false;
+#endif
+		}
+
+		public static string MakeRelativePath(string strBaseFile, string strTargetFile)
+		{
+			if(strBaseFile == null) throw new ArgumentNullException("strBasePath");
+			if(strTargetFile == null) throw new ArgumentNullException("strTargetPath");
+			if(strBaseFile.Length == 0) return strTargetFile;
+			if(strTargetFile.Length == 0) return string.Empty;
+
+			if(strTargetFile.StartsWith("\\\\")) return strTargetFile;
+
+			if((strBaseFile.Length >= 3) && (strTargetFile.Length >= 3))
+			{
+				if((strBaseFile[1] == ':') && (strTargetFile[1] == ':') &&
+					(strBaseFile[2] == '\\') && (strTargetFile[2] == '\\') &&
+					(strBaseFile[0] != strTargetFile[0]))
+					return strTargetFile;
+			}
+
+#if KeePassLibSD
+			return strTargetFile;
+#else
+			try
+			{
+				const int nMaxPath = NativeMethods.MAX_PATH * 2;
+				StringBuilder sb = new StringBuilder(nMaxPath + 2);
+				if(NativeMethods.PathRelativePathTo(sb, strBaseFile, 0,
+					strTargetFile, 0) == false)
+					return strTargetFile;
+
+				string str = sb.ToString();
+				while(str.StartsWith(".\\")) str = str.Substring(2, str.Length - 2);
+
+				return str;
+			}
+			catch(Exception) { Debug.Assert(false); return strTargetFile; }
+#endif
+		}
+
+		public static string MakeAbsolutePath(string strBaseFile, string strTargetFile)
+		{
+			if(strBaseFile == null) throw new ArgumentNullException("strBasePath");
+			if(strTargetFile == null) throw new ArgumentNullException("strTargetPath");
+			if(strBaseFile.Length == 0) return strTargetFile;
+			if(strTargetFile.Length == 0) return string.Empty;
+
+			if(IsAbsolutePath(strTargetFile)) return strTargetFile;
+
+			string strBaseDir = GetFileDirectory(strBaseFile, true, false);
+			return GetShortestAbsolutePath(strBaseDir + strTargetFile);
+		}
+
+		public static bool IsAbsolutePath(string strPath)
+		{
+			if(strPath == null) throw new ArgumentNullException("strPath");
+			if(strPath.Length == 0) return false;
+
+			if(strPath.StartsWith("\\\\")) return true;
+
+			try { return Path.IsPathRooted(strPath); }
+			catch(Exception) { Debug.Assert(false); }
+
+			return true;
+		}
+
+		public static string GetShortestAbsolutePath(string strPath)
+		{
+			if(strPath == null) throw new ArgumentNullException("strPath");
+			if(strPath.Length == 0) return string.Empty;
+
+			string str;
+			try { str = Path.GetFullPath(strPath); }
+			catch(Exception) { Debug.Assert(false); return strPath; }
+
+			Debug.Assert(str.IndexOf("\\..\\") < 0);
+			return str.Replace("\\.\\", "\\");
+		}
+
+		public static int GetUrlLength(string strText, int nOffset)
+		{
+			if(strText == null) throw new ArgumentNullException("strText");
+			if(nOffset > strText.Length) throw new ArgumentException(); // Not >= (0 len)
+
+			int iPosition = nOffset, nLength = 0, nStrLen = strText.Length;
+
+			while(iPosition < nStrLen)
+			{
+				char ch = strText[iPosition];
+				++iPosition;
+
+				if((ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n'))
+					break;
+
+				++nLength;
+			}
+
+			return nLength;
 		}
 	}
 }

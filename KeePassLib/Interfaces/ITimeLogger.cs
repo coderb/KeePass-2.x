@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ namespace KeePassLib.Interfaces
 {
 	/// <summary>
 	/// Interface for objects that support various times (creation time, last
-	/// access time, last modification time and expiration time). Offers
+	/// access time, last modification time and expiry time). Offers
 	/// several helper functions (for example a function to touch the current
 	/// object).
 	/// </summary>

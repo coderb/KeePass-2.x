@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,19 +29,22 @@ namespace KeePass.Native
 	internal static partial class NativeMethods
 	{
 		internal const int WM_KEYDOWN = 0x0100;
+		internal const int WM_KEYUP = 0x0101;
 		internal const int WM_DRAWCLIPBOARD = 0x0308;
 		internal const int WM_CHANGECBCHAIN = 0x030D;
 		internal const int WM_HOTKEY = 0x0312;
 		internal const int WM_USER = 0x0400;
 		internal const int WM_SYSCOMMAND = 0x0112;
 		internal const int WM_POWERBROADCAST = 0x0218;
+		internal const int WM_COPYDATA = 0x004A;
 
-		internal const uint HWND_BROADCAST = 0xFFFF;
+		internal const int HWND_BROADCAST = 0xFFFF;
 
 		internal const uint INPUT_MOUSE = 0;
 		internal const uint INPUT_KEYBOARD = 1;
 		internal const uint INPUT_HARDWARE = 2;
 
+		internal const int VK_RETURN = 0x0D;
 		internal const int VK_SHIFT = 0x10;
 		internal const int VK_CONTROL = 0x11;
 		internal const int VK_MENU = 0x12;
@@ -55,6 +58,11 @@ namespace KeePass.Native
 		internal const int VK_LWIN = 0x5B;
 		internal const int VK_RWIN = 0x5C;
 
+		internal const int VK_F5 = 0x74;
+		internal const int VK_F6 = 0x75;
+		internal const int VK_F7 = 0x76;
+		internal const int VK_F8 = 0x77;
+
 		internal const uint KEYEVENTF_EXTENDEDKEY = 1;
 		internal const uint KEYEVENTF_KEYUP = 2;
 
@@ -62,9 +70,11 @@ namespace KeePass.Native
 
 		internal const int GWL_STYLE = -16;
 
-		internal const uint WS_VISIBLE = 0x10000000;
+		internal const int WS_VISIBLE = 0x10000000;
 
 		internal const int EM_SETCHARFORMAT = WM_USER + 68;
+
+		internal const int ES_WANTRETURN = 0x1000;
 
 		internal const int SCF_SELECTION = 0x0001;
 
@@ -87,6 +97,20 @@ namespace KeePass.Native
 
 		internal const int LVM_FIRST = 0x1000;
 		internal const int LVM_ENSUREVISIBLE = LVM_FIRST + 19;
+		internal const int LVM_SCROLL = LVM_FIRST + 20;
+
+		internal const int WM_MOUSEACTIVATE = 0x21;
+		internal const int MA_ACTIVATE = 1;
+		internal const int MA_ACTIVATEANDEAT = 2;
+		internal const int MA_NOACTIVATE = 3;
+		internal const int MA_NOACTIVATEANDEAT = 4;
+
+		internal const int BCM_SETSHIELD = 0x160C;
+
+		internal const int SHCNE_ASSOCCHANGED = 0x08000000;
+		internal const uint SHCNF_IDLIST = 0x0000;
+
+		// internal const uint SW_INVALIDATE = 0x0002;
 
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -139,35 +163,22 @@ namespace KeePass.Native
 			TruncateExisting = 5
 		}
 
-		[Flags]
-		internal enum TaskDialogFlags : uint
+		private enum ScrollBarDirection : int
 		{
-			EnableHyperlinks = 0x0001,
-			UseHIconMain = 0x0002,
-			UseHIconFooter = 0x0004,
-			AllowDialogCancellation = 0x0008,
-			UseCommandLinks = 0x0010,
-			UseCommandLinksNoIcon = 0x0020,
-			ExpandFooterArea = 0x0040,
-			ExpandedByDefault = 0x0080,
-			VerificationFlagChecked = 0x0100,
-			ShowProgressBar = 0x0200,
-			ShowMarqueeProgressBar = 0x0400,
-			CallbackTimer = 0x0800,
-			PositionRelativeToWindow = 0x1000,
-			RtlLayout = 0x2000,
-			NoDefaultRadioButton = 0x4000
+			SB_HORZ = 0,
+			SB_VERT = 1,
+			SB_CTL = 2,
+			SB_BOTH = 3
 		}
 
-		[Flags]
-		internal enum TaskDialogCommonButtonFlags : uint
+		private enum ScrollInfoMask : uint
 		{
-			OkButton = 0x0001, // Return value: IDOK
-			YesButton = 0x0002, // Return value: IDYES
-			NoButton = 0x0004, // Return value: IDNO
-			CancelButton = 0x0008, // Return value: IDCANCEL
-			RetryButton = 0x0010, // Return value: IDRETRY
-			CloseButton = 0x0020  // Return value: IDCLOSE
+			SIF_RANGE = 0x1,
+			SIF_PAGE = 0x2,
+			SIF_POS = 0x4,
+			SIF_DISABLENOSCROLL = 0x8,
+			SIF_TRACKPOS = 0x10,
+			SIF_ALL = SIF_RANGE + SIF_PAGE + SIF_POS + SIF_TRACKPOS
 		}
 	}
 }

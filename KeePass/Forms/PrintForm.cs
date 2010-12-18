@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ using KeePass.Resources;
 using KeePassLib;
 using KeePassLib.Security;
 using KeePassLib.Delegates;
+using KeePassLib.Resources;
 using KeePassLib.Utility;
 
 namespace KeePass.Forms
@@ -42,16 +43,16 @@ namespace KeePass.Forms
 		private bool m_bPrintMode = true;
 
 		private bool m_bBlockPreviewRefresh = false;
-		private string m_strGeneratedHTML = string.Empty;
+		private string m_strGeneratedHtml = string.Empty;
 
-		public string GeneratedHTML
+		public string GeneratedHtml
 		{
-			get { return m_strGeneratedHTML; }
+			get { return m_strGeneratedHtml; }
 		}
 
 		public void InitEx(PwGroup pgDataSource, bool bPrintMode)
 		{
-			Debug.Assert(pgDataSource != null); if(pgDataSource == null) throw new ArgumentNullException();
+			Debug.Assert(pgDataSource != null); if(pgDataSource == null) throw new ArgumentNullException("pgDataSource");
 
 			m_pgDataSource = pgDataSource;
 			m_bPrintMode = bPrintMode;
@@ -74,8 +75,8 @@ namespace KeePass.Forms
 			}
 			else // HTML export mode
 			{
-				strTitle = KPRes.ExportHTML;
-				strDesc = KPRes.ExportHTMLDesc;
+				strTitle = KPRes.ExportHtml;
+				strDesc = KPRes.ExportHtmlDesc;
 			}
 
 			m_bannerImage.Image = BannerFactory.CreateBanner(m_bannerImage.Width,
@@ -105,20 +106,26 @@ namespace KeePass.Forms
 				m_lblPreviewHint.Visible = false;
 			}
 
-			UpdateHTMLDocument();
+			UpdateHtmlDocument();
 			UpdateUIState();
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
+			UpdateHtmlDocument();
+
 			if(m_bPrintMode)
 			{
-				try { m_wbMain.Print(); } // Throws in Mono 1.2.6
+				try { m_wbMain.Print(); } // Throws in Mono 1.2.6+
+				catch(NotImplementedException)
+				{
+					MessageService.ShowWarning(KLRes.FrameworkNotImplExcp);
+				}
 				catch(Exception ex) { MessageService.ShowWarning(ex); }
 			}
-			else m_strGeneratedHTML = m_wbMain.DocumentText;
+			else m_strGeneratedHtml = m_wbMain.DocumentText;
 
-			if(m_strGeneratedHTML == null) m_strGeneratedHTML = string.Empty;
+			if(m_strGeneratedHtml == null) m_strGeneratedHtml = string.Empty;
 		}
 
 		private void OnBtnCancel(object sender, EventArgs e)
@@ -127,12 +134,16 @@ namespace KeePass.Forms
 
 		private void UpdateUIState()
 		{
-			m_cbAutoType.Enabled = m_rbDetails.Checked;
+			m_cbAutoType.Enabled = m_cbCustomStrings.Enabled = m_rbDetails.Checked;
 
-			if(m_rbTabular.Checked) m_cbAutoType.Checked = false;
+			if(m_rbTabular.Checked)
+			{
+				m_cbAutoType.Checked = false;
+				m_cbCustomStrings.Checked = false;
+			}
 		}
 
-		private void UpdateHTMLDocument()
+		private void UpdateHtmlDocument()
 		{
 			if(m_bBlockPreviewRefresh) return;
 
@@ -140,13 +151,13 @@ namespace KeePass.Forms
 
 			StringBuilder sb = new StringBuilder();
 
-			sb.Append("<html><head><meta><title>");
+			sb.Append(@"<html><head><meta><title>");
 			sb.Append(m_pgDataSource.Name);
-			sb.Append("</title></meta></head><body>");
+			sb.Append(@"</title></meta></head><body>");
 
-			sb.Append("<h2>");
+			sb.Append(@"<h2>");
 			sb.Append(m_pgDataSource.Name);
-			sb.Append("</h2>");
+			sb.Append(@"</h2>");
 
 			GroupHandler gh = null;
 			EntryHandler eh = null;
@@ -158,6 +169,7 @@ namespace KeePass.Forms
 			bool bCreation = m_cbCreation.Checked, bLastMod = m_cbLastMod.Checked;
 			bool bLastAcc = m_cbLastAccess.Checked, bExpire = m_cbExpire.Checked;
 			bool bAutoType = m_cbAutoType.Checked;
+			bool bCustomStrings = m_cbCustomStrings.Checked;
 
 			bool bMonoPasswords = m_cbMonospaceForPasswords.Checked;
 			if(m_rbMonospace.Checked) bMonoPasswords = false; // Monospaced anyway
@@ -169,17 +181,17 @@ namespace KeePass.Forms
 			if(m_rbSerif.Checked)
 			{
 				strFontInit = "<font face=\"Times New Roman,Serif\"><small>";
-				strFontExit = "</small></font>";
+				strFontExit = @"</small></font>";
 			}
 			else if(m_rbSansSerif.Checked)
 			{
 				strFontInit = "<font face=\"Tahoma,MS Sans Serif,Sans Serif,Verdana\"><small>";
-				strFontExit = "</small></font>";
+				strFontExit = @"</small></font>";
 			}
 			else if(m_rbMonospace.Checked)
 			{
-				strFontInit = "<code>";
-				if(bSmallMono) strFontInit += "<small>";
+				strFontInit = @"<code>";
+				if(bSmallMono) strFontInit += @"<small>";
 
 				strFontExit = (bSmallMono ? @"</small></code>" : @"</code>");
 			}
@@ -191,7 +203,7 @@ namespace KeePass.Forms
 				// nFieldCount += (bPassword ? 1 : 0) + (bURL ? 1 : 0) + (bNotes ? 1 : 0);
 
 				string strCellPre = "<td align=\"left\" valign=\"top\">";
-				string strCellPost = "</td>";
+				string strCellPost = @"</td>";
 
 				strCellPre += strFontInit;
 				strCellPost = strFontExit + strCellPost;
@@ -203,7 +215,7 @@ namespace KeePass.Forms
 				if(bTitle) sb.Append("<td><b><small>" + KPRes.Title + "</small></b></td>");
 				if(bUserName) sb.Append("<td><b><small>" + KPRes.UserName + "</small></b></td>");
 				if(bPassword) sb.Append("<td><b><small>" + KPRes.Password + "</small></b></td>");
-				if(bURL) sb.Append("<td><b><small>" + KPRes.URL + "</small></b></td>");
+				if(bURL) sb.Append("<td><b><small>" + KPRes.Url + "</small></b></td>");
 				if(bNotes) sb.Append("<td><b><small>" + KPRes.Notes + "</small></b></td>");
 				if(bCreation) sb.Append("<td><b><small>" + KPRes.CreationTime + "</small></b></td>");
 				if(bLastAcc) sb.Append("<td><b><small>" + KPRes.LastAccessTime + "</small></b></td>");
@@ -257,7 +269,7 @@ namespace KeePass.Forms
 					if(bTitle) WriteDetailsLine(sb, KPRes.Title, pe.Strings.ReadSafe(PwDefs.TitleField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
 					if(bUserName) WriteDetailsLine(sb, KPRes.UserName, pe.Strings.ReadSafe(PwDefs.UserNameField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
 					if(bPassword) WriteDetailsLine(sb, KPRes.Password, pe.Strings.ReadSafe(PwDefs.PasswordField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
-					if(bURL) WriteDetailsLine(sb, KPRes.URL, pe.Strings.ReadSafe(PwDefs.UrlField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
+					if(bURL) WriteDetailsLine(sb, KPRes.Url, pe.Strings.ReadSafe(PwDefs.UrlField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
 					if(bNotes) WriteDetailsLine(sb, KPRes.Notes, pe.Strings.ReadSafe(PwDefs.NotesField), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
 					if(bCreation) WriteDetailsLine(sb, KPRes.CreationTime, pe.CreationTime.ToString(), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
 					if(bLastAcc) WriteDetailsLine(sb, KPRes.LastAccessTime, pe.LastAccessTime.ToString(), bSmallMono, bMonoPasswords, strFontInit, strFontExit);
@@ -272,15 +284,11 @@ namespace KeePass.Forms
 
 					foreach(KeyValuePair<string, ProtectedString> kvp in pe.Strings)
 					{
-						if((kvp.Key != PwDefs.TitleField) && (kvp.Key != PwDefs.UserNameField) &&
-							(kvp.Key != PwDefs.PasswordField) && (kvp.Key != PwDefs.UrlField) &&
-							(kvp.Key != PwDefs.NotesField))
-						{
+						if(bCustomStrings && !PwDefs.IsStandardField(kvp.Key))
 							WriteDetailsLine(sb, kvp, bSmallMono, bMonoPasswords, strFontInit, strFontExit);
-						}
 					}
 
-					sb.AppendLine("<tr><td>&nbsp;</td></tr>");
+					sb.AppendLine(@"<tr><td>&nbsp;</td></tr>");
 
 					return true;
 				};
@@ -290,18 +298,14 @@ namespace KeePass.Forms
 			m_pgDataSource.TraverseTree(TraversalMethod.PreOrder, gh, eh);
 
 			if(m_rbTabular.Checked)
-			{
 				sb.AppendLine("</table>");
-			}
 			else if(m_rbDetails.Checked)
-			{
 				sb.AppendLine("</table><br />");
-			}
 
 			sb.AppendLine("</body></html>");
 
-			m_wbMain.AllowNavigation = true;
-			m_wbMain.DocumentText = sb.ToString();
+			try { UIUtil.SetWebBrowserDocument(m_wbMain, sb.ToString()); }
+			catch(Exception) { } // Throws in Mono 2.0+
 
 			m_bBlockPreviewRefresh = false;
 		}
@@ -368,23 +372,31 @@ namespace KeePass.Forms
 
 		private void OnBtnConfigPage(object sender, EventArgs e)
 		{
-			try { m_wbMain.ShowPageSetupDialog(); } // Throws in Mono 1.2.6
-			catch(Exception ex) { MessageService.ShowWarning(ex); }
+			UpdateHtmlDocument();
 
-			UpdateHTMLDocument();
+			try { m_wbMain.ShowPageSetupDialog(); } // Throws in Mono 1.2.6+
+			catch(NotImplementedException)
+			{
+				MessageService.ShowWarning(KLRes.FrameworkNotImplExcp);
+			}
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 		}
 
 		private void OnBtnPrintPreview(object sender, EventArgs e)
 		{
-			try { m_wbMain.ShowPrintPreviewDialog(); } // Throws in Mono 1.2.6
-			catch(Exception ex) { MessageService.ShowWarning(ex); }
+			UpdateHtmlDocument();
 
-			UpdateHTMLDocument();
+			try { m_wbMain.ShowPrintPreviewDialog(); } // Throws in Mono 1.2.6+
+			catch(NotImplementedException)
+			{
+				MessageService.ShowWarning(KLRes.FrameworkNotImplExcp);
+			}
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 		}
 
 		private void OnTabSelectedIndexChanged(object sender, EventArgs e)
 		{
-			if(m_tabMain.SelectedIndex == 0) UpdateHTMLDocument();
+			if(m_tabMain.SelectedIndex == 0) UpdateHtmlDocument();
 		}
 
 		private void OnTabularCheckedChanged(object sender, EventArgs e)
@@ -395,18 +407,18 @@ namespace KeePass.Forms
 		private void OnLinkSelectAllFields(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			m_cbTitle.Checked = m_cbUser.Checked = m_cbPassword.Checked =
-				m_cbUrl.Checked = m_cbNotes.Checked =
-				m_cbCreation.Checked = m_cbLastAccess.Checked = m_cbLastMod.Checked =
-				m_cbExpire.Checked = m_cbAutoType.Checked = m_cbGroups.Checked = true;
+				m_cbUrl.Checked = m_cbNotes.Checked = m_cbCreation.Checked =
+				m_cbLastAccess.Checked = m_cbLastMod.Checked = m_cbExpire.Checked =
+				m_cbAutoType.Checked = m_cbGroups.Checked = m_cbCustomStrings.Checked = true;
 			UpdateUIState();
 		}
 
 		private void OnLinkDeselectAllFields(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			m_cbTitle.Checked = m_cbUser.Checked = m_cbPassword.Checked =
-				m_cbUrl.Checked = m_cbNotes.Checked =
-				m_cbCreation.Checked = m_cbLastAccess.Checked = m_cbLastMod.Checked =
-				m_cbExpire.Checked = m_cbAutoType.Checked = m_cbGroups.Checked = false;
+				m_cbUrl.Checked = m_cbNotes.Checked = m_cbCreation.Checked =
+				m_cbLastAccess.Checked = m_cbLastMod.Checked = m_cbExpire.Checked =
+				m_cbAutoType.Checked = m_cbGroups.Checked = m_cbCustomStrings.Checked = false;
 			UpdateUIState();
 		}
 

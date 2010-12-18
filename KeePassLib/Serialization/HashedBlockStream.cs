@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,15 +35,15 @@ namespace KeePassLib.Serialization
 
 		private Stream m_sBaseStream;
 		private bool m_bWriting;
-		private bool m_bEos;
+		private bool m_bEos = false;
 
 		private BinaryReader m_brInput;
 		private BinaryWriter m_bwOutput;
 
 		private byte[] m_pbBuffer;
-		private int m_nBufferPos;
+		private int m_nBufferPos = 0;
 
-		private uint m_uBufferIndex;
+		private uint m_uBufferIndex = 0;
 
 		public override bool CanRead
 		{
@@ -73,12 +73,12 @@ namespace KeePassLib.Serialization
 
 		public HashedBlockStream(Stream sBaseStream, bool bWriting)
 		{
-			this.Initialize(sBaseStream, bWriting, 0);
+			Initialize(sBaseStream, bWriting, 0);
 		}
 
 		public HashedBlockStream(Stream sBaseStream, bool bWriting, int nBufferSize)
 		{
-			this.Initialize(sBaseStream, bWriting, nBufferSize);
+			Initialize(sBaseStream, bWriting, nBufferSize);
 		}
 
 		private void Initialize(Stream sBaseStream, bool bWriting, int nBufferSize)
@@ -90,7 +90,6 @@ namespace KeePassLib.Serialization
 
 			m_sBaseStream = sBaseStream;
 			m_bWriting = bWriting;
-			m_bEos = false;
 
 			UTF8Encoding utf8 = new UTF8Encoding(false, false);
 
@@ -112,9 +111,6 @@ namespace KeePassLib.Serialization
 
 				m_pbBuffer = new byte[nBufferSize];
 			}
-
-			m_nBufferPos = 0;
-			m_uBufferIndex = 0;
 		}
 
 		public override void Flush()
@@ -156,7 +152,7 @@ namespace KeePassLib.Serialization
 			throw new NotSupportedException();
 		}
 
-		public override void SetLength(long value)
+		public override void SetLength(long lValue)
 		{
 			throw new NotSupportedException();
 		}

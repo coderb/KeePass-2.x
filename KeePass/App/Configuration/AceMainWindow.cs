@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -98,18 +98,18 @@ namespace KeePass.App.Configuration
 			set { m_bMax = value; }
 		}
 
-		private int m_nSplitterHorz = AppDefs.InvalidWindowValue;
-		public int SplitterHorizontalPosition
+		private float m_fSplitterHorz = float.Epsilon;
+		public float SplitterHorizontalFrac
 		{
-			get { return m_nSplitterHorz; }
-			set { m_nSplitterHorz = value; }
+			get { return m_fSplitterHorz; }
+			set { m_fSplitterHorz = value; }
 		}
 
-		private int m_nSplitterVert = AppDefs.InvalidWindowValue;
-		public int SplitterVerticalPosition
+		private float m_fSplitterVert = float.Epsilon;
+		public float SplitterVerticalFrac
 		{
-			get { return m_nSplitterVert; }
-			set { m_nSplitterVert = value; }
+			get { return m_fSplitterVert; }
+			set { m_fSplitterVert = value; }
 		}
 
 		private AceMainWindowLayout m_layout = AceMainWindowLayout.Default;
@@ -154,11 +154,39 @@ namespace KeePass.App.Configuration
 			set { m_bMinAfterCopy = value; }
 		}
 
+		private bool m_bMinAfterLocking = false;
+		public bool MinimizeAfterLocking
+		{
+			get { return m_bMinAfterLocking; }
+			set { m_bMinAfterLocking = value; }
+		}
+
+		private bool m_bMinAfterOpeningDb = false;
+		public bool MinimizeAfterOpeningDatabase
+		{
+			get { return m_bMinAfterOpeningDb; }
+			set { m_bMinAfterOpeningDb = value; }
+		}
+
+		private bool m_bQuickFindExcludeExpired = false;
+		public bool QuickFindExcludeExpired
+		{
+			get { return m_bQuickFindExcludeExpired; }
+			set { m_bQuickFindExcludeExpired = value; }
+		}
+
 		private bool m_bFocusResAfterQuickFind = false;
 		public bool FocusResultsAfterQuickFind
 		{
 			get { return m_bFocusResAfterQuickFind; }
 			set { m_bFocusResAfterQuickFind = value; }
+		}
+
+		private bool m_bCopyUrls = false;
+		public bool CopyUrlsInsteadOfOpening
+		{
+			get { return m_bCopyUrls; }
+			set { m_bCopyUrls = value; }
 		}
 
 		private AceToolBar m_tb = new AceToolBar();
@@ -184,7 +212,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private AceTanView m_tan = new AceTanView();
-		public AceTanView TANView
+		public AceTanView TanView
 		{
 			get { return m_tan; }
 			set
@@ -194,10 +222,17 @@ namespace KeePass.App.Configuration
 			}
 		}
 
+		private bool m_bAutoResizeColumns = false;
+		public bool EntryListAutoResizeColumns
+		{
+			get { return m_bAutoResizeColumns; }
+			set { m_bAutoResizeColumns = value; }
+		}
+
 		private Dictionary<string, AceColumn> m_aceColumns =
 			new Dictionary<string, AceColumn>();
 		[XmlIgnore]
-		public Dictionary<string, AceColumn> Columns
+		public Dictionary<string, AceColumn> ColumnsDict
 		{
 			get { return m_aceColumns; }
 			set
@@ -207,7 +242,8 @@ namespace KeePass.App.Configuration
 			}
 		}
 
-		public AceColumn[] ColumnsList
+		[XmlArray("EntryListColumns")]
+		public AceColumn[] ColumnsSerializable
 		{
 			get
 			{
@@ -215,7 +251,8 @@ namespace KeePass.App.Configuration
 				int i = 0;
 				foreach(KeyValuePair<string, AceColumn> kvp in m_aceColumns)
 				{
-					a[i] = kvp.Value; ++i;
+					a[i] = kvp.Value;
+					++i;
 				}
 				return a;
 			}

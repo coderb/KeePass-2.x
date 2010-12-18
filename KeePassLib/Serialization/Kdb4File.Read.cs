@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -73,36 +73,35 @@ namespace KeePassLib.Serialization
 			m_format = kdbFormat;
 			m_slLogger = slLogger;
 
+			HashingStreamEx hashedStream = new HashingStreamEx(sSource, false, null);
+
 			UTF8Encoding encNoBom = new UTF8Encoding(false, false);
 
 			try
 			{
-				BinaryReader br = null;
-				BinaryReader brDecrypted = null;
+				BinaryReaderEx br = null;
+				BinaryReaderEx brDecrypted = null;
 				Stream readerStream = null;
 
 				if(kdbFormat == Kdb4Format.Default)
 				{
-					br = new BinaryReader(sSource, encNoBom);
+					br = new BinaryReaderEx(hashedStream, encNoBom, KLRes.FileCorrupted);
 					ReadHeader(br);
 
-					Stream sDecrypted = AttachStreamDecryptor(sSource);
-					if((sDecrypted == null) || (sDecrypted == sSource))
+					Stream sDecrypted = AttachStreamDecryptor(hashedStream);
+					if((sDecrypted == null) || (sDecrypted == hashedStream))
 						throw new SecurityException(KLRes.CryptoStreamFailed);
 
-					brDecrypted = new BinaryReader(sDecrypted, encNoBom);
+					brDecrypted = new BinaryReaderEx(sDecrypted, encNoBom, KLRes.FileCorrupted);
 					byte[] pbStoredStartBytes = brDecrypted.ReadBytes(32);
 
-					if((pbStoredStartBytes == null) || (pbStoredStartBytes.Length != 32) ||
-						(m_pbStreamStartBytes == null) || (m_pbStreamStartBytes.Length != 32))
-					{
+					if((m_pbStreamStartBytes == null) || (m_pbStreamStartBytes.Length != 32))
 						throw new InvalidDataException();
-					}
 
 					for(int iStart = 0; iStart < 32; ++iStart)
 					{
 						if(pbStoredStartBytes[iStart] != m_pbStreamStartBytes[iStart])
-							throw new InvalidCompositeKeyException(null);
+							throw new InvalidCompositeKeyException();
 					}
 
 					Stream sHashed = new HashedBlockStream(sDecrypted, false);
@@ -112,7 +111,7 @@ namespace KeePassLib.Serialization
 					else readerStream = sHashed;
 				}
 				else if(kdbFormat == Kdb4Format.PlainXml)
-					readerStream = sSource;
+					readerStream = hashedStream;
 				else { Debug.Assert(false); throw new FormatException("KdbFormat"); }
 
 				if(kdbFormat != Kdb4Format.PlainXml) // Is an encrypted format
@@ -123,26 +122,35 @@ namespace KeePassLib.Serialization
 						throw new SecurityException("Invalid protected stream key!");
 					}
 
-					m_randomStream = new CryptoRandomStream(CrsAlgorithm.ArcFour, m_pbProtectedStreamKey);
+					m_randomStream = new CryptoRandomStream(m_craInnerRandomStream,
+						m_pbProtectedStreamKey);
 				}
 				else m_randomStream = null; // No random stream for plain text files
 
-				ReadXmlStreamed(readerStream, sSource);
+				ReadXmlStreamed(readerStream, hashedStream);
 				// ReadXmlDom(readerStream);
 
 				GC.KeepAlive(brDecrypted);
 				GC.KeepAlive(br);
-				
-				sSource.Close();
+
+				CommonCleanUpRead(sSource, hashedStream);
 			}
 			catch(Exception)
 			{
-				sSource.Close();
+				CommonCleanUpRead(sSource, hashedStream);
 				throw;
 			}
 		}
 
-		private void ReadHeader(BinaryReader br)
+		private void CommonCleanUpRead(Stream sSource, HashingStreamEx hashedStream)
+		{
+			hashedStream.Close();
+			m_pbHashOfFileOnDisk = hashedStream.Hash;
+
+			sSource.Close();
+		}
+
+		private void ReadHeader(BinaryReaderEx br)
 		{
 			Debug.Assert(br != null);
 			if(br == null) throw new ArgumentNullException("br");
@@ -153,15 +161,19 @@ namespace KeePassLib.Serialization
 			uint uSig2 = MemUtil.BytesToUInt32(pbSig2);
 
 			if((uSig1 == FileSignatureOld1) && (uSig2 == FileSignatureOld2))
-				throw new OldFormatException(PwDefs.ShortProductName + @" 1.x");
+				throw new OldFormatException(PwDefs.ShortProductName + @" 1.x",
+					OldFormatException.OldFormatType.KeePass1x);
 
-			if((uSig1 != FileSignature1) || (uSig2 != FileSignature2))
-				throw new FormatException(KLRes.FileSigInvalid);
+			if((uSig1 == FileSignature1) && (uSig2 == FileSignature2)) { }
+			else if((uSig1 == FileSignaturePreRelease1) && (uSig2 ==
+				FileSignaturePreRelease2)) { }
+			else throw new FormatException(KLRes.FileSigInvalid);
 
 			byte[] pb = br.ReadBytes(4);
 			uint uVersion = MemUtil.BytesToUInt32(pb);
-			if((uVersion > FileVersion32) && (m_slLogger != null))
-				m_slLogger.SetText(KLRes.FileVersionUnknown, LogStatusType.Warning);
+			if((uVersion & FileVersionCriticalMask) > (FileVersion32 & FileVersionCriticalMask))
+				throw new FormatException(KLRes.FileVersionUnsupported +
+					MessageService.NewParagraph + KLRes.FileNewVerReq);
 
 			while(true)
 			{
@@ -170,7 +182,7 @@ namespace KeePassLib.Serialization
 			}
 		}
 
-		private bool ReadHeaderField(BinaryReader brSource)
+		private bool ReadHeaderField(BinaryReaderEx brSource)
 		{
 			Debug.Assert(brSource != null);
 			if(brSource == null) throw new ArgumentNullException("brSource");
@@ -181,9 +193,12 @@ namespace KeePassLib.Serialization
 			byte[] pbData = null;
 			if(uSize > 0)
 			{
+				string strPrevExcpText = brSource.ReadExceptionText;
+				brSource.ReadExceptionText = KLRes.FileHeaderEndEarly;
+
 				pbData = brSource.ReadBytes(uSize);
-				if((pbData == null) || (pbData.Length != uSize))
-					throw new EndOfStreamException(KLRes.FileHeaderEndEarly);
+
+				brSource.ReadExceptionText = strPrevExcpText;
 			}
 
 			bool bResult = true;
@@ -226,10 +241,14 @@ namespace KeePassLib.Serialization
 					m_pbStreamStartBytes = pbData;
 					break;
 
+				case Kdb4HeaderFieldID.InnerRandomStreamID:
+					SetInnerRandomStreamID(pbData);
+					break;
+
 				default:
 					Debug.Assert(false);
 					if(m_slLogger != null)
-						m_slLogger.SetText(KLRes.UnknownHeaderID + @": " +
+						m_slLogger.SetText(KLRes.UnknownHeaderId + @": " +
 							kdbID.ToString() + "!", LogStatusType.Warning);
 					break;
 			}
@@ -252,6 +271,15 @@ namespace KeePassLib.Serialization
 				throw new FormatException(KLRes.FileUnknownCompression);
 
 			m_pwDatabase.Compression = (PwCompressionAlgorithm)uID;
+		}
+
+		private void SetInnerRandomStreamID(byte[] pbID)
+		{
+			uint uID = MemUtil.BytesToUInt32(pbID);
+			if(uID >= (uint)CrsAlgorithm.Count)
+				throw new FormatException(KLRes.FileUnknownCipher);
+
+			m_craInnerRandomStream = (CrsAlgorithm)uID;
 		}
 
 		private Stream AttachStreamDecryptor(Stream s)

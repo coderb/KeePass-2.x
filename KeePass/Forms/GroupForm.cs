@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -73,10 +73,11 @@ namespace KeePass.Forms
 			m_dtExpires.CustomFormat = DateTimeFormatInfo.CurrentInfo.ShortDatePattern +
 				" " + DateTimeFormatInfo.CurrentInfo.LongTimePattern;
 
-			m_pwIconIndex = m_pwGroup.IconID;
+			m_pwIconIndex = m_pwGroup.IconId;
 			m_pwCustomIconID = m_pwGroup.CustomIconUuid;
 			
 			m_tbName.Text = m_pwGroup.Name;
+			m_tbNotes.Text = m_pwGroup.Notes;
 
 			if(m_pwCustomIconID != PwUuid.Zero)
 				m_btnIcon.Image = m_pwDatabase.GetCustomIcon(m_pwCustomIconID);
@@ -93,13 +94,27 @@ namespace KeePass.Forms
 				m_cbExpires.Checked = false;
 			}
 
+			UIUtil.MakeInheritableBoolComboBox(m_cmbEnableAutoType,
+				m_pwGroup.EnableAutoType, m_pwGroup.GetAutoTypeEnabledInherited());
+			UIUtil.MakeInheritableBoolComboBox(m_cmbEnableSearching,
+				m_pwGroup.EnableSearching, m_pwGroup.GetSearchingEnabledInherited());
+
 			m_tbDefaultAutoTypeSeq.Text = m_pwGroup.GetAutoTypeSequenceInherited();
 
 			if(m_pwGroup.DefaultAutoTypeSequence.Length == 0)
 				m_rbAutoTypeInherit.Checked = true;
 			else m_rbAutoTypeOverride.Checked = true;
 
+			CustomizeForScreenReader();
 			EnableControlsEx();
+		}
+
+		private void CustomizeForScreenReader()
+		{
+			if(!Program.Config.UI.OptimizeForScreenReader) return;
+
+			m_btnIcon.Text = KPRes.PickIcon;
+			m_btnAutoTypeEdit.Text = KPRes.ConfigureAutoType;
 		}
 
 		private void EnableControlsEx()
@@ -110,12 +125,18 @@ namespace KeePass.Forms
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
+			m_pwGroup.Touch(true, false);
+
 			m_pwGroup.Name = m_tbName.Text;
-			m_pwGroup.IconID = m_pwIconIndex;
+			m_pwGroup.Notes = m_tbNotes.Text;
+			m_pwGroup.IconId = m_pwIconIndex;
 			m_pwGroup.CustomIconUuid = m_pwCustomIconID;
 
 			m_pwGroup.Expires = m_cbExpires.Checked;
 			m_pwGroup.ExpiryTime = m_dtExpires.Value;
+
+			m_pwGroup.EnableAutoType = UIUtil.GetInheritableBoolComboBoxValue(m_cmbEnableAutoType);
+			m_pwGroup.EnableSearching = UIUtil.GetInheritableBoolComboBoxValue(m_cmbEnableSearching);
 
 			if(m_rbAutoTypeInherit.Checked)
 				m_pwGroup.DefaultAutoTypeSequence = string.Empty;
@@ -141,7 +162,7 @@ namespace KeePass.Forms
 				}
 				else // Standard icon
 				{
-					m_pwIconIndex = (PwIcon)ipf.ChosenIconID;
+					m_pwIconIndex = (PwIcon)ipf.ChosenIconId;
 					m_pwCustomIconID = PwUuid.Zero;
 					m_btnIcon.Image = m_ilClientIcons.Images[(int)m_pwIconIndex];
 				}

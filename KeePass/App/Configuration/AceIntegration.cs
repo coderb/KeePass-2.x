@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -70,11 +70,25 @@ namespace KeePass.App.Configuration
 			set { m_bSearchKeyFilesOnRemovable = value; }
 		}
 
-		private bool m_bSingleInstance = false;
+		private bool m_bSingleInstance = true;
 		public bool LimitToSingleInstance
 		{
 			get { return m_bSingleInstance; }
 			set { m_bSingleInstance = value; }
+		}
+
+		private bool m_bPrependInitSeqIE = true;
+		public bool AutoTypePrependInitSequenceForIE
+		{
+			get { return m_bPrependInitSeqIE; }
+			set { m_bPrependInitSeqIE = value; }
+		}
+
+		private bool m_bSpecialReleaseAlt = true;
+		public bool AutoTypeReleaseAltWithKeyPress
+		{
+			get { return m_bSpecialReleaseAlt; }
+			set { m_bSpecialReleaseAlt = value; }
 		}
 	}
 }

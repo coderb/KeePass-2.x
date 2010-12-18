@@ -38,7 +38,7 @@
 			this.m_linkAcknowledgements = new System.Windows.Forms.LinkLabel();
 			this.m_linkDonate = new System.Windows.Forms.LinkLabel();
 			this.m_btnOK = new System.Windows.Forms.Button();
-			this.m_lvComponents = new System.Windows.Forms.ListView();
+			this.m_lvComponents = new KeePass.UI.CustomListViewEx();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -62,7 +62,7 @@
 			// 
 			this.m_lblOsi.Location = new System.Drawing.Point(12, 96);
 			this.m_lblOsi.Name = "m_lblOsi";
-			this.m_lblOsi.Size = new System.Drawing.Size(363, 14);
+			this.m_lblOsi.Size = new System.Drawing.Size(400, 14);
 			this.m_lblOsi.TabIndex = 2;
 			this.m_lblOsi.Text = "KeePass is OSI Certified Open Source Software.";
 			// 
@@ -197,6 +197,6 @@
 		private System.Windows.Forms.LinkLabel m_linkAcknowledgements;
 		private System.Windows.Forms.LinkLabel m_linkDonate;
 		private System.Windows.Forms.Button m_btnOK;
-		private System.Windows.Forms.ListView m_lvComponents;
+		private KeePass.UI.CustomListViewEx m_lvComponents;
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@ namespace KeePass.Forms
 {
 	public partial class LanguageForm : Form, IGwmWindow
 	{
-		private List<KPTranslation> m_lTranslations = null;
-
 		public bool CanCloseWithoutDataLoss { get { return true; } }
 
 		public LanguageForm()
@@ -72,13 +70,12 @@ namespace KeePass.Forms
 			lvi.SubItems.Add(AppDefs.DefaultTrlContact);
 
 			string strExe = WinUtil.GetExecutable();
-			string strPath = UrlUtil.GetFileDirectory(strExe, false);
-			m_lTranslations = GetAvailableTranslations(strPath);
+			string strPath = UrlUtil.GetFileDirectory(strExe, false, true);
+			GetAvailableTranslations(strPath);
 		}
 
-		private List<KPTranslation> GetAvailableTranslations(string strPath)
+		private void GetAvailableTranslations(string strPath)
 		{
-			List<KPTranslation> l = new List<KPTranslation>();
 			DirectoryInfo di = new DirectoryInfo(strPath);
 			FileInfo[] vFiles = di.GetFiles();
 
@@ -89,7 +86,6 @@ namespace KeePass.Forms
 					try
 					{
 						KPTranslation kpTrl = KPTranslation.LoadFromFile(fi.FullName);
-						l.Add(kpTrl);
 
 						ListViewItem lvi = m_lvLanguages.Items.Add(
 							kpTrl.Properties.NameEnglish, 0);
@@ -100,13 +96,10 @@ namespace KeePass.Forms
 					}
 					catch(Exception ex)
 					{
-						MessageBox.Show(ex.Message, PwDefs.ShortProductName,
-							MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						MessageService.ShowWarning(ex.Message);
 					}
 				}
 			}
-
-			return l;
 		}
 
 		private void OnBtnClose(object sender, EventArgs e)

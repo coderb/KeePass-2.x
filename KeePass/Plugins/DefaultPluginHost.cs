@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,11 +21,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+using KeePass.App.Configuration;
+using KeePass.DataExchange;
+using KeePass.Ecas;
 using KeePass.Forms;
 using KeePass.Util;
 
 using KeePassLib;
 using KeePassLib.Cryptography.Cipher;
+using KeePassLib.Cryptography.PasswordGenerator;
 using KeePassLib.Keys;
 using KeePassLib.Security;
 
@@ -68,6 +72,11 @@ namespace KeePass.Plugins
 			get { return m_cmdLineArgs; }
 		}
 
+		public AceCustomConfig CustomConfig
+		{
+			get { return Program.Config.CustomConfig; }
+		}
+
 		public CipherPool CipherPool
 		{
 			get { return m_cipherPool; }
@@ -76,6 +85,36 @@ namespace KeePass.Plugins
 		public KeyProviderPool KeyProviderPool
 		{
 			get { return Program.KeyProviderPool; }
+		}
+
+		public KeyValidatorPool KeyValidatorPool
+		{
+			get { return Program.KeyValidatorPool; }
+		}
+
+		public FileFormatPool FileFormatPool
+		{
+			get { return Program.FileFormatPool; }
+		}
+
+		public TempFilesPool TempFilesPool
+		{
+			get { return Program.TempFilesPool; }
+		}
+
+		public EcasPool EcasPool
+		{
+			get { return Program.EcasPool; }
+		}
+
+		public EcasTriggerSystem TriggerSystem
+		{
+			get { return Program.TriggerSystem; }
+		}
+
+		public CustomPwGeneratorPool PwGeneratorPool
+		{
+			get { return Program.PwGeneratorPool; }
 		}
 	}
 }

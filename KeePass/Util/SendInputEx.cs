@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,14 +31,22 @@ using KeePassLib.Utility;
 
 namespace KeePass.Util
 {
+	internal sealed class SiStateEx
+	{
+		public bool InputBlocked = false;
+		public IntPtr OriginalKeyboardLayout = IntPtr.Zero;
+	}
+
 	public static class SendInputEx
 	{
 		public static void SendKeysWait(string strKeys, bool bObfuscate)
 		{
-			InitSendKeys();
+			SiStateEx si = InitSendKeys();
 
 			try
 			{
+				Debug.Assert(GetActiveKeyModifiers().Count == 0);
+
 				if(bObfuscate)
 				{
 					try { SendObfuscated(strKeys); }
@@ -48,29 +56,36 @@ namespace KeePass.Util
 			}
 			catch
 			{
-				FinishSendKeys();
+				FinishSendKeys(si);
 				throw;
 			}
 
-			FinishSendKeys();
+			FinishSendKeys(si);
 		}
 
-		private static void InitSendKeys()
+		private static SiStateEx InitSendKeys()
 		{
+			SiStateEx si = new SiStateEx();
+
 			try
 			{
-				NativeMethods.BlockInput(true);
+				EnsureSameKeyboardLayout(si);
+
+				si.InputBlocked = NativeMethods.BlockInput(true);
 
 				SendKeys.Flush();
 				// Application.DoEvents(); // Done by SendKeys.Flush
 
 				List<int> lMod = GetActiveKeyModifiers();
 				ActivateKeyModifiers(lMod, false);
+				SpecialReleaseModifiers(lMod);
 			}
 			catch(Exception) { Debug.Assert(false); }
+
+			return si;
 		}
 
-		private static void FinishSendKeys()
+		private static void FinishSendKeys(SiStateEx si)
 		{
 			try
 			{
@@ -79,43 +94,90 @@ namespace KeePass.Util
 				// them while KeePass is auto-typing!
 				// ActivateKeyModifiers(lRestore, true);
 
-				NativeMethods.BlockInput(false);
+				if(si.InputBlocked) NativeMethods.BlockInput(false); // Unblock
+
+				if(si.OriginalKeyboardLayout != IntPtr.Zero)
+					NativeMethods.ActivateKeyboardLayout(si.OriginalKeyboardLayout, 0);
 
 				Application.DoEvents();
 			}
 			catch(Exception) { Debug.Assert(false); }
 		}
 
+		private static void EnsureSameKeyboardLayout(SiStateEx si)
+		{
+			IntPtr hWndTarget = NativeMethods.GetForegroundWindow();
+
+			uint uTargetProcessId;
+			uint uTargetThreadId = NativeMethods.GetWindowThreadProcessId(hWndTarget,
+				out uTargetProcessId);
+			
+			IntPtr hklSelf = NativeMethods.GetKeyboardLayout(0);
+			IntPtr hklTarget = NativeMethods.GetKeyboardLayout(uTargetThreadId);
+			
+			if(hklSelf != hklTarget)
+			{
+				si.OriginalKeyboardLayout = NativeMethods.ActivateKeyboardLayout(
+					hklTarget, 0);
+				
+				Debug.Assert(si.OriginalKeyboardLayout == hklSelf);
+			}
+		}
+
 		private static bool SendModifierVKey(int vKey, bool bDown)
 		{
-			Debug.Assert((Marshal.SizeOf(typeof(NativeMethods.INPUT)) == 28) ||
-				(Marshal.SizeOf(typeof(NativeMethods.INPUT)) == 32));
-
 			if(bDown || IsKeyModifierActive(vKey))
 			{
-				NativeMethods.INPUT[] pInput = new NativeMethods.INPUT[1];
-
-				pInput[0].Type = NativeMethods.INPUT_KEYBOARD;
-				pInput[0].KeyboardInput.VirtualKeyCode = (ushort)vKey;
-				pInput[0].KeyboardInput.ScanCode =
-					(ushort)(NativeMethods.MapVirtualKey((uint)vKey, 0) & 0xFF);
-				pInput[0].KeyboardInput.Flags = (bDown ? 0 :
-					NativeMethods.KEYEVENTF_KEYUP) | (IsExtendedKeyEx(vKey) ?
-					NativeMethods.KEYEVENTF_EXTENDEDKEY : 0);
-				pInput[0].KeyboardInput.Time = 0;
-				pInput[0].KeyboardInput.ExtraInfo = NativeMethods.GetMessageExtraInfo();
-
-				if(NativeMethods.SendInput(1, pInput,
-					Marshal.SizeOf(typeof(NativeMethods.INPUT))) != 1)
-				{
-					// Debug.Assert(false);
-					return false;
-				}
-
-				return true;
+				if(IntPtr.Size == 4) return SendModifierVKey32Unchecked(vKey, bDown);
+				else if(IntPtr.Size == 8) return SendModifierVKey64Unchecked(vKey, bDown);
+				else { Debug.Assert(false); }
 			}
 
 			return false;
+		}
+
+		private static bool SendModifierVKey32Unchecked(int vKey, bool bDown)
+		{
+			NativeMethods.INPUT32[] pInput = new NativeMethods.INPUT32[1];
+
+			pInput[0].Type = NativeMethods.INPUT_KEYBOARD;
+			pInput[0].KeyboardInput.VirtualKeyCode = (ushort)vKey;
+			pInput[0].KeyboardInput.ScanCode =
+				(ushort)(NativeMethods.MapVirtualKey((uint)vKey, 0) & 0xFF);
+			pInput[0].KeyboardInput.Flags = ((bDown ? 0 :
+				NativeMethods.KEYEVENTF_KEYUP) | (IsExtendedKeyEx(vKey) ?
+				NativeMethods.KEYEVENTF_EXTENDEDKEY : 0));
+			pInput[0].KeyboardInput.Time = 0;
+			pInput[0].KeyboardInput.ExtraInfo = NativeMethods.GetMessageExtraInfo();
+
+			Debug.Assert(Marshal.SizeOf(typeof(NativeMethods.INPUT32)) == 28);
+			if(NativeMethods.SendInput32(1, pInput,
+				Marshal.SizeOf(typeof(NativeMethods.INPUT32))) != 1)
+				return false;
+
+			return true;
+		}
+
+		private static bool SendModifierVKey64Unchecked(int vKey, bool bDown)
+		{
+			NativeMethods.SpecializedKeyboardINPUT64[] pInput = new
+				NativeMethods.SpecializedKeyboardINPUT64[1];
+
+			pInput[0].Type = NativeMethods.INPUT_KEYBOARD;
+			pInput[0].VirtualKeyCode = (ushort)vKey;
+			pInput[0].ScanCode = (ushort)(NativeMethods.MapVirtualKey(
+				(uint)vKey, 0) & 0xFF);
+			pInput[0].Flags = ((bDown ? 0 : NativeMethods.KEYEVENTF_KEYUP) |
+				(IsExtendedKeyEx(vKey) ? NativeMethods.KEYEVENTF_EXTENDEDKEY : 0));
+			pInput[0].Time = 0;
+			pInput[0].ExtraInfo = NativeMethods.GetMessageExtraInfo();
+
+			Debug.Assert(Marshal.SizeOf(typeof(NativeMethods.SpecializedKeyboardINPUT64)) == 40);
+			if(NativeMethods.SendInput64Special(1, pInput,
+				Marshal.SizeOf(typeof(NativeMethods.SpecializedKeyboardINPUT64))) != 1)
+				return false;
+
+			return true;
 		}
 
 		private static bool IsExtendedKeyEx(int vKey)
@@ -184,6 +246,20 @@ namespace KeePass.Util
 			}
 		}
 
+		private static void SpecialReleaseModifiers(List<int> vKeys)
+		{
+			// Get out of a menu bar that was focused when only
+			// using Alt as hot key modifier
+			if(Program.Config.Integration.AutoTypeReleaseAltWithKeyPress &&
+				(vKeys.Count == 2) && vKeys.Contains(NativeMethods.VK_MENU) &&
+				(vKeys.Contains(NativeMethods.VK_LMENU) ||
+				vKeys.Contains(NativeMethods.VK_RMENU)))
+			{
+				SendModifierVKey(NativeMethods.VK_LMENU, true);
+				SendModifierVKey(NativeMethods.VK_LMENU, false);
+			}
+		}
+
 		private static void SendObfuscated(string strKeys)
 		{
 			Debug.Assert(strKeys != null);
@@ -214,7 +290,7 @@ namespace KeePass.Util
 			catch(Exception ex) { excpInner = ex; }
 
 			cnt.SetData();
-			cev.Dispose();
+			cev.Release();
 
 			if(excpInner != null) throw excpInner;
 		}

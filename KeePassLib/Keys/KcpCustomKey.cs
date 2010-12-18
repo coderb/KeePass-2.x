@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,20 +29,36 @@ namespace KeePassLib.Keys
 {
 	public sealed class KcpCustomKey : IUserKey
 	{
+		private string m_strName;
 		private ProtectedBinary m_pbKey;
+
+		/// <summary>
+		/// Name of the provider that generated the custom key.
+		/// </summary>
+		public string Name
+		{
+			get { return m_strName; }
+		}
 
 		public ProtectedBinary KeyData
 		{
 			get { return m_pbKey; }
 		}
 
-		public KcpCustomKey(byte[] pb)
+		public KcpCustomKey(string strName, byte[] pbKeyData, bool bPerformHash)
 		{
-			Debug.Assert(pb != null); if(pb == null) throw new ArgumentNullException();
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
+			Debug.Assert(pbKeyData != null); if(pbKeyData == null) throw new ArgumentNullException("pbKeyData");
 
-			SHA256Managed sha256 = new SHA256Managed();
-			byte[] pbRaw = sha256.ComputeHash(pb);
-			m_pbKey = new ProtectedBinary(true, pbRaw);
+			m_strName = strName;
+
+			if(bPerformHash)
+			{
+				SHA256Managed sha256 = new SHA256Managed();
+				byte[] pbRaw = sha256.ComputeHash(pbKeyData);
+				m_pbKey = new ProtectedBinary(true, pbRaw);
+			}
+			else m_pbKey = new ProtectedBinary(true, pbKeyData);
 		}
 
 		public void Clear()

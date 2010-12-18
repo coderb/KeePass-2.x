@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2008 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2009 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ namespace KeePassLib.Utility
 		public static DateTime UnpackTime(byte[] pb)
 		{
 			Debug.Assert((pb != null) && (pb.Length == 5));
-			if(pb == null) throw new ArgumentNullException();
+			if(pb == null) throw new ArgumentNullException("pb");
 			if(pb.Length != 5) throw new ArgumentException();
 
 			int n1 = pb[0], n2 = pb[1], n3 = pb[2], n4 = pb[3], n5 = pb[4];
@@ -112,7 +112,7 @@ namespace KeePassLib.Utility
 		{
 			Debug.Assert(PwTimeLength == 7);
 
-			Debug.Assert(pb != null); if(pb == null) throw new ArgumentNullException();
+			Debug.Assert(pb != null); if(pb == null) throw new ArgumentNullException("pb");
 			Debug.Assert(pb.Length == 7); if(pb.Length != 7) throw new ArgumentException();
 
 			return new DateTime(((int)pb[1] << 8) | (int)pb[0], (int)pb[2], (int)pb[3],
@@ -142,6 +142,24 @@ namespace KeePassLib.Utility
 
 			Debug.Assert(false);
 			return DateTime.Now;
+		}
+
+		public static string SerializeUtc(DateTime dt)
+		{
+			string str = dt.ToUniversalTime().ToString("s");
+			if(str.EndsWith("Z") == false) str += "Z";
+			return str;
+		}
+
+		public static bool TryDeserializeUtc(string str, out DateTime dt)
+		{
+			if(str == null) throw new ArgumentNullException("str");
+
+			if(str.EndsWith("Z")) str = str.Substring(0, str.Length - 1);
+
+			bool bResult = StrUtil.TryParseDateTime(str, out dt);
+			if(bResult) dt = dt.ToLocalTime();
+			return bResult;
 		}
 	}
 }
