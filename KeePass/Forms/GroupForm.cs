@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -172,6 +172,8 @@ namespace KeePass.Forms
 				UIUtil.SetButtonImage(m_btnIcon, m_ilClientIcons.Images[
 					(int)m_pwIconIndex], true);
 			}
+
+			UIUtil.DestroyForm(ipf);
 		}
 
 		private void OnExpiresValueChanged(object sender, EventArgs e)
@@ -186,19 +188,19 @@ namespace KeePass.Forms
 
 		private void OnBtnAutoTypeEdit(object sender, EventArgs e)
 		{
-			EditAutoTypeItemForm dlg = new EditAutoTypeItemForm();
-
 			string strName = @"(" + KPRes.AutoType + @")";
 
 			AutoTypeConfig atConfig = new AutoTypeConfig();
 			atConfig.DefaultSequence = m_tbDefaultAutoTypeSeq.Text;
 
+			EditAutoTypeItemForm dlg = new EditAutoTypeItemForm();
 			dlg.InitEx(atConfig, new ProtectedStringDictionary(),
 				strName, true);
 
 			if(dlg.ShowDialog() == DialogResult.OK)
 				m_tbDefaultAutoTypeSeq.Text = atConfig.DefaultSequence;
 
+			UIUtil.DestroyForm(dlg);
 			EnableControlsEx();
 		}
 

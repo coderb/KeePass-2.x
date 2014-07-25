@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -290,6 +290,8 @@ namespace KeePassLib.Utility
 
 			while((nRead = sSource.Read(pbBuf, 0, nBufSize)) > 0)
 				sTarget.Write(pbBuf, 0, nRead);
+
+			// Do not close any of the streams
 		}
 
 		public static byte[] Compress(byte[] pbData)

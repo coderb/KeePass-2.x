@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ namespace KeePassLib
 	/// <summary>
 	/// Compression algorithm specifiers.
 	/// </summary>
-	public enum PwCompressionAlgorithm : uint
+	public enum PwCompressionAlgorithm
 	{
 		/// <summary>
 		/// No compression.
@@ -34,13 +34,13 @@ namespace KeePassLib
 		/// <summary>
 		/// GZip compression.
 		/// </summary>
-		GZip,
+		GZip = 1,
 
 		/// <summary>
 		/// Virtual field: currently known number of algorithms. Should not be used
 		/// by plugins or libraries -- it's used internally only.
 		/// </summary>
-		Count
+		Count = 2
 	}
 
 	/// <summary>
@@ -79,7 +79,7 @@ namespace KeePassLib
 	/// <summary>
 	/// Icon identifiers for groups and password entries.
 	/// </summary>
-	public enum PwIcon : uint
+	public enum PwIcon
 	{
 		Key = 0,
 		World,

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,11 +40,6 @@ namespace KeePass.Util
 		// private static NativeMethods.BindKeyHandler m_hOnHotKey =
 		//	new NativeMethods.BindKeyHandler(HotKeyManager.OnHotKey);
 
-		private const uint MOD_ALT = 1;
-		private const uint MOD_CONTROL = 2;
-		private const uint MOD_SHIFT = 4;
-		private const uint MOD_WIN = 8;
-
 		// public static Form ReceiverWindow
 		// {
 		//	get { return m_fRecvWnd; }
@@ -69,9 +64,9 @@ namespace KeePass.Util
 			if(kKey == Keys.None) return false;
 
 			uint uMod = 0;
-			if((kKey & Keys.Shift) != Keys.None) uMod |= MOD_SHIFT;
-			if((kKey & Keys.Alt) != Keys.None) uMod |= MOD_ALT;
-			if((kKey & Keys.Control) != Keys.None) uMod |= MOD_CONTROL;
+			if((kKey & Keys.Shift) != Keys.None) uMod |= NativeMethods.MOD_SHIFT;
+			if((kKey & Keys.Alt) != Keys.None) uMod |= NativeMethods.MOD_ALT;
+			if((kKey & Keys.Control) != Keys.None) uMod |= NativeMethods.MOD_CONTROL;
 
 			uint vkCode = (uint)(kKey & Keys.KeyCode);
 

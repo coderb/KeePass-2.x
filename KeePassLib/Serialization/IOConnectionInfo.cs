@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -243,7 +243,7 @@ namespace KeePassLib.Serialization
 
 			if(bEncode)
 			{
-				byte[] pbUtf8 = Encoding.UTF8.GetBytes(strToEncode);
+				byte[] pbUtf8 = StrUtil.Utf8.GetBytes(strToEncode);
 
 				unchecked
 				{
@@ -263,7 +263,7 @@ namespace KeePassLib.Serialization
 						pbBase[iPos] -= (byte)(iPos * 11);
 				}
 
-				return Encoding.UTF8.GetString(pbBase, 0, pbBase.Length);
+				return StrUtil.Utf8.GetString(pbBase, 0, pbBase.Length);
 			}
 		}
 		*/

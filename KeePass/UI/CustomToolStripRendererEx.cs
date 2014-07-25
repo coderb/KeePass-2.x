@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,6 +28,72 @@ namespace KeePass.UI
 {
 	public sealed class CustomToolStripRendererEx : ToolStripProfessionalRenderer
 	{
+		private sealed class CtsrColorTable : ProfessionalColorTable
+		{
+			private const double m_dblLight = 0.75;
+			private const double m_dblDark = 0.05;
+
+			internal static Color StartGradient(Color clr)
+			{
+				return UIUtil.LightenColor(clr, m_dblLight);
+			}
+
+			internal static Color EndGradient(Color clr)
+			{
+				return UIUtil.DarkenColor(clr, m_dblDark);
+			}
+
+			public override Color ButtonPressedGradientBegin
+			{
+				get { return StartGradient(this.ButtonPressedGradientMiddle); }
+			}
+
+			public override Color ButtonPressedGradientEnd
+			{
+				get { return EndGradient(this.ButtonPressedGradientMiddle); }
+			}
+
+			public override Color ButtonSelectedGradientBegin
+			{
+				get { return StartGradient(this.ButtonSelectedGradientMiddle); }
+			}
+
+			public override Color ButtonSelectedGradientEnd
+			{
+				get { return EndGradient(this.ButtonSelectedGradientMiddle); }
+			}
+
+			public override Color ImageMarginGradientBegin
+			{
+				get { return StartGradient(this.ImageMarginGradientMiddle); }
+			}
+
+			public override Color ImageMarginGradientEnd
+			{
+				get { return EndGradient(this.ImageMarginGradientMiddle); }
+			}
+
+			/* public override Color MenuItemPressedGradientBegin
+			{
+				get { return StartGradient(this.MenuItemPressedGradientMiddle); }
+			}
+
+			public override Color MenuItemPressedGradientEnd
+			{
+				get { return EndGradient(this.MenuItemPressedGradientMiddle); }
+			} */
+
+			public override Color MenuItemSelectedGradientBegin
+			{
+				get { return StartGradient(this.MenuItemSelected); }
+			}
+
+			public override Color MenuItemSelectedGradientEnd
+			{
+				get { return EndGradient(this.MenuItemSelected); }
+			}
+		}
+
 		public CustomToolStripRendererEx()
 			: base(new CtsrColorTable())
 		{
@@ -81,72 +147,6 @@ namespace KeePass.UI
 				br.Dispose();
 			}
 			else base.OnRenderMenuItemBackground(e);
-		}
-	}
-
-	public sealed class CtsrColorTable : ProfessionalColorTable
-	{
-		private const double m_dblLight = 0.75;
-		private const double m_dblDark = 0.05;
-
-		internal static Color StartGradient(Color clr)
-		{
-			return UIUtil.LightenColor(clr, m_dblLight);
-		}
-
-		internal static Color EndGradient(Color clr)
-		{
-			return UIUtil.DarkenColor(clr, m_dblDark);
-		}
-
-		public override Color ButtonPressedGradientBegin
-		{
-			get { return StartGradient(this.ButtonPressedGradientMiddle); }
-		}
-
-		public override Color ButtonPressedGradientEnd
-		{
-			get { return EndGradient(this.ButtonPressedGradientMiddle); }
-		}
-
-		public override Color ButtonSelectedGradientBegin
-		{
-			get { return StartGradient(this.ButtonSelectedGradientMiddle); }
-		}
-
-		public override Color ButtonSelectedGradientEnd
-		{
-			get { return EndGradient(this.ButtonSelectedGradientMiddle); }
-		}
-
-		public override Color ImageMarginGradientBegin
-		{
-			get { return StartGradient(this.ImageMarginGradientMiddle); }
-		}
-
-		public override Color ImageMarginGradientEnd
-		{
-			get { return EndGradient(this.ImageMarginGradientMiddle); }
-		}
-
-		/* public override Color MenuItemPressedGradientBegin
-		{
-			get { return StartGradient(this.MenuItemPressedGradientMiddle); }
-		}
-
-		public override Color MenuItemPressedGradientEnd
-		{
-			get { return EndGradient(this.MenuItemPressedGradientMiddle); }
-		} */
-
-		public override Color MenuItemSelectedGradientBegin
-		{
-			get { return StartGradient(this.MenuItemSelected); }
-		}
-
-		public override Color MenuItemSelectedGradientEnd
-		{
-			get { return EndGradient(this.MenuItemSelected); }
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ namespace KeePass.Forms
 				else if(strEnc == BinaryDataClassifier.BdeUtf7)
 					enc = Encoding.UTF7;
 				else if(strEnc == BinaryDataClassifier.BdeUtf8)
-					enc = Encoding.UTF8;
+					enc = new UTF8Encoding(false);
 				else if(strEnc == BinaryDataClassifier.BdeUtf32)
 					enc = Encoding.UTF32;
 				else if(strEnc == BinaryDataClassifier.BdeUnicodeLE)

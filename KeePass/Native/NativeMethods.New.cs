@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,38 +24,63 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 using KeePass.UI;
 using KeePass.Util;
 
+using KeePassLib.Utility;
+
 namespace KeePass.Native
 {
 	internal static partial class NativeMethods
 	{
-		internal static string GetWindowText(IntPtr hWnd)
+		internal static string GetWindowText(IntPtr hWnd, bool bTrim)
 		{
 			int nLength = GetWindowTextLength(hWnd);
 			if(nLength <= 0) return string.Empty;
 
 			StringBuilder sb = new StringBuilder(nLength + 1);
 			GetWindowText(hWnd, sb, sb.Capacity);
-			return sb.ToString();
+			string strWindow = sb.ToString();
+
+			return (bTrim ? strWindow.Trim() : strWindow);
 		}
 
-		internal static void GetForegroundWindowInfo(out IntPtr hWnd,
-			out string strWindowText)
+		internal static IntPtr GetForegroundWindowHandle()
 		{
+			if(!KeePassLib.Native.NativeLib.IsUnix())
+				return GetForegroundWindow(); // Windows API
+
+			return new IntPtr(int.Parse(RunXDoTool("getactivewindow")));
+		}
+
+		private static readonly char[] m_vWindowTrim = { '\r', '\n' };
+		internal static void GetForegroundWindowInfo(out IntPtr hWnd,
+			out string strWindowText, bool bTrimWindow)
+		{
+			hWnd = GetForegroundWindowHandle();
+
 			if(!KeePassLib.Native.NativeLib.IsUnix()) // Windows
-			{
-				hWnd = GetForegroundWindow();
-				strWindowText = GetWindowText(hWnd);
-			}
+				strWindowText = GetWindowText(hWnd, bTrimWindow);
 			else // Unix
 			{
-				hWnd = new IntPtr(int.Parse(RunXDoTool("getactivewindow")));
 				strWindowText = RunXDoTool("getactivewindow getwindowname");
+				if(!string.IsNullOrEmpty(strWindowText))
+				{
+					if(bTrimWindow) strWindowText = strWindowText.Trim();
+					else strWindowText = strWindowText.Trim(m_vWindowTrim);
+				}
 			}
+		}
+
+		internal static bool IsWindowEx(IntPtr hWnd)
+		{
+			if(!KeePassLib.Native.NativeLib.IsUnix()) // Windows
+				return IsWindow(hWnd);
+
+			return true;
 		}
 
 		internal static int GetWindowStyle(IntPtr hWnd)
@@ -63,11 +88,20 @@ namespace KeePass.Native
 			return GetWindowLong(hWnd, GWL_STYLE);
 		}
 
+		internal static bool SetForegroundWindowEx(IntPtr hWnd)
+		{
+			if(!KeePassLib.Native.NativeLib.IsUnix())
+				return SetForegroundWindow(hWnd);
+
+			return (RunXDoTool("windowactivate " +
+				hWnd.ToInt64().ToString()).Trim().Length == 0);
+		}
+
 		internal static bool EnsureForegroundWindow(IntPtr hWnd)
 		{
-			if(IsWindow(hWnd) == false) return false;
+			if(IsWindowEx(hWnd) == false) return false;
 
-			if(SetForegroundWindow(hWnd) == false)
+			if(SetForegroundWindowEx(hWnd) == false)
 			{
 				Debug.Assert(false);
 				return false;
@@ -76,7 +110,7 @@ namespace KeePass.Native
 			int nStartMS = Environment.TickCount;
 			while((Environment.TickCount - nStartMS) < 1000)
 			{
-				IntPtr h = GetForegroundWindow();
+				IntPtr h = GetForegroundWindowHandle();
 				if(h == hWnd) return true;
 
 				Application.DoEvents();
@@ -103,7 +137,10 @@ namespace KeePass.Native
 						if(((nStyle & WS_VISIBLE) != 0) &&
 							(GetWindowTextLength(hWnd) > 0))
 						{
-							break;
+							// Skip the taskbar window (required for Windows 7,
+							// when the target window is the only other window
+							// in the taskbar)
+							if(!IsTaskBar(hWnd)) break;
 						}
 					}
 
@@ -113,8 +150,29 @@ namespace KeePass.Native
 
 				if(hWnd == IntPtr.Zero) return false;
 
-				Debug.Assert(GetWindowText(hWnd) != "Start");
+				Debug.Assert(GetWindowText(hWnd, true) != "Start");
 				return EnsureForegroundWindow(hWnd);
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return false;
+		}
+
+		private static bool IsTaskBar(IntPtr hWnd)
+		{
+			try
+			{
+				string strText = GetWindowText(hWnd, true);
+				if(strText == null) return false;
+				if(!strText.Equals("Start", StrUtil.CaseIgnoreCmp)) return false;
+
+				uint uProcessId;
+				NativeMethods.GetWindowThreadProcessId(hWnd, out uProcessId);
+
+				Process p = Process.GetProcessById((int)uProcessId);
+				string strExe = UrlUtil.GetFileName(p.MainModule.FileName).Trim();
+
+				return strExe.Equals("Explorer.exe", StrUtil.CaseIgnoreCmp);
 			}
 			catch(Exception) { Debug.Assert(false); }
 
@@ -213,6 +271,65 @@ namespace KeePass.Native
 
 			try { DwmSetWindowAttributeInt(hWnd, DWMWA_DISALLOW_PEEK, ref iNoPeek, 4); }
 			catch(Exception) { Debug.Assert(!WinUtil.IsAtLeastWindowsVista); }
+		}
+
+		internal static uint? GetLastInputTime()
+		{
+			try
+			{
+				LASTINPUTINFO lii = new LASTINPUTINFO();
+				lii.cbSize = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO));
+
+				if(!GetLastInputInfo(ref lii)) { Debug.Assert(false); return null; }
+
+				return lii.dwTime;
+			}
+			catch(Exception)
+			{
+				Debug.Assert(KeePassLib.Native.NativeLib.IsUnix() ||
+					WinUtil.IsWindows9x);
+			}
+
+			return null;
+		}
+
+		internal static bool SHGetFileInfo(string strPath, int nPrefImgDim,
+			out Image img, out string strDisplayName)
+		{
+			img = null;
+			strDisplayName = null;
+
+			try
+			{
+				SHFILEINFO fi = new SHFILEINFO();
+
+				IntPtr p = SHGetFileInfo(strPath, 0, ref fi, (uint)Marshal.SizeOf(typeof(
+					SHFILEINFO)), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+				if(p == IntPtr.Zero) return false;
+
+				if(fi.hIcon != IntPtr.Zero)
+				{
+					using(Icon ico = Icon.FromHandle(fi.hIcon)) // Doesn't take ownership
+					{
+						img = new Bitmap(nPrefImgDim, nPrefImgDim);
+						using(Graphics g = Graphics.FromImage(img))
+						{
+							g.Clear(Color.Transparent);
+							g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+							g.SmoothingMode = SmoothingMode.HighQuality;
+							g.DrawIcon(ico, new Rectangle(0, 0, nPrefImgDim, nPrefImgDim));
+						}
+					}
+
+					if(!DestroyIcon(fi.hIcon)) { Debug.Assert(false); }
+				}
+
+				strDisplayName = fi.szDisplayName;
+				return true;
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return false;
 		}
 	}
 }

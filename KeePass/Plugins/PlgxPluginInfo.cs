@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -156,7 +156,8 @@ namespace KeePass.Plugins
 		public string GetAbsPath(string strRelPath)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(this.CsprojFilePath));
-			return UrlUtil.MakeAbsolutePath(this.CsprojFilePath, strRelPath);
+			return UrlUtil.MakeAbsolutePath(this.CsprojFilePath,
+				UrlUtil.ConvertSeparators(strRelPath));
 		}
 	}
 }

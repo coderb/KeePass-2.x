@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ namespace KeePass.Forms
 			EcasTrigger tNew = new EcasTrigger(true);
 			EcasTriggerForm f = new EcasTriggerForm();
 			f.InitEx(tNew, false, m_ilIcons);
-			if(f.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(f) == DialogResult.OK)
 			{
 				m_triggers.TriggerCollection.Add(tNew);
 				UpdateTriggerListEx(false);
@@ -158,7 +158,7 @@ namespace KeePass.Forms
 
 			EcasTriggerForm dlg = new EcasTriggerForm();
 			dlg.InitEx(lvsic[0].Tag as EcasTrigger, true, m_ilIcons);
-			if(dlg.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(dlg) == DialogResult.OK)
 				UpdateTriggerListEx(true);
 		}
 
@@ -189,7 +189,7 @@ namespace KeePass.Forms
 			AppHelp.ShowHelp(AppDefs.HelpTopics.Triggers, null);
 		}
 
-		private static void DoCopyTriggers(ListViewItem[] vTriggers)
+		private void DoCopyTriggers(ListViewItem[] vTriggers)
 		{
 			if(vTriggers == null) return;
 
@@ -213,7 +213,8 @@ namespace KeePass.Forms
 				XmlSerializer xmls = new XmlSerializer(typeof(EcasTriggerContainer));
 				xmls.Serialize(xw, v);
 
-				Clipboard.SetText(Encoding.UTF8.GetString(ms.ToArray()));
+				ClipboardUtil.Copy(StrUtil.Utf8.GetString(ms.ToArray()), false,
+					false, null, null, this.Handle);
 			}
 			catch(Exception excp) { MessageService.ShowWarning(excp.Message); }
 		}
@@ -239,7 +240,7 @@ namespace KeePass.Forms
 				string strData = Clipboard.GetText();
 				XmlSerializer xmls = new XmlSerializer(typeof(EcasTriggerContainer));
 
-				byte[] pbData = Encoding.UTF8.GetBytes(strData);
+				byte[] pbData = StrUtil.Utf8.GetBytes(strData);
 				MemoryStream ms = new MemoryStream(pbData, false);
 				EcasTriggerContainer c = (EcasTriggerContainer)xmls.Deserialize(ms);
 

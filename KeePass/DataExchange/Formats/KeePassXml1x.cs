@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -151,10 +151,11 @@ namespace KeePass.DataExchange.Formats
 						XmlUtil.SafeInnerText(xmlChild)));
 				else if(xmlChild.Name == ElemImage)
 				{
-					uint uImage;
-					if(uint.TryParse(XmlUtil.SafeInnerText(xmlChild), out uImage))
+					int nImage;
+					if(int.TryParse(XmlUtil.SafeInnerText(xmlChild), out nImage))
 					{
-						if(uImage < (uint)PwIcon.Count) pe.IconId = (PwIcon)uImage;
+						if((nImage >= 0) && (nImage < (int)PwIcon.Count))
+							pe.IconId = (PwIcon)nImage;
 						else { Debug.Assert(false); }
 					}
 					else { Debug.Assert(false); }

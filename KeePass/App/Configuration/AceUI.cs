@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -165,6 +165,17 @@ namespace KeePass.App.Configuration
 			set { m_bDeWordWrap = value; }
 		}
 
+		private string m_strCharPickerRect = string.Empty;
+		public string CharPickerRect
+		{
+			get { return m_strCharPickerRect; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_strCharPickerRect = value;
+			}
+		}
+
 		private ulong m_uKeyCreationFlags = (ulong)AceKeyUIFlags.None;
 		public ulong KeyCreationFlags
 		{
@@ -178,6 +189,13 @@ namespace KeePass.App.Configuration
 			get { return m_uKeyPromptFlags; }
 			set { m_uKeyPromptFlags = value; }
 		}
+
+		// private bool m_bEditCancelConfirmation = true;
+		// public bool EntryEditCancelConfirmation
+		// {
+		//	get { return m_bEditCancelConfirmation; }
+		//	set { m_bEditCancelConfirmation = value; }
+		// }
 	}
 
 	public sealed class AceHiding
@@ -198,6 +216,13 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_bHideInEntryDialog; }
 			set { m_bHideInEntryDialog = value; }
+		}
+
+		private bool m_bUnhideBtnAlsoUnhidesSec = false;
+		public bool UnhideButtonAlsoUnhidesSource
+		{
+			get { return m_bUnhideBtnAlsoUnhidesSec; }
+			set { m_bUnhideBtnAlsoUnhidesSec = value; }
 		}
 	}
 

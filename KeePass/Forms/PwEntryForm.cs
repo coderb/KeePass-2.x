@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -310,8 +310,14 @@ namespace KeePass.Forms
 
 						ListViewItem lvi = m_lvStrings.Items.Add(kvpStr.Key, (int)pwIcon);
 
-						if(!kvpStr.Value.IsViewable) lvi.SubItems.Add("********");
-						else lvi.SubItems.Add(kvpStr.Value.ReadString());
+						if(!kvpStr.Value.IsViewable)
+							lvi.SubItems.Add(PwDefs.HiddenPassword);
+						else
+						{
+							string strValue = StrUtil.MultiToSingleLine(
+								kvpStr.Value.ReadString());
+							lvi.SubItems.Add(strValue);
+						}
 					}
 				}
 				UIUtil.SetTopVisibleItem(m_lvStrings, iTopVisible);
@@ -336,7 +342,7 @@ namespace KeePass.Forms
 			}
 		}
 
-		private static Image CreateColorButtonImage(Button btn, Color clr)
+		internal static Image CreateColorButtonImage(Button btn, Color clr)
 		{
 			return UIUtil.CreateColorBitmap24(btn.ClientRectangle.Width - 8,
 				btn.ClientRectangle.Height - 8, clr);
@@ -437,10 +443,10 @@ namespace KeePass.Forms
 		{
 			m_lvHistory.SmallImageList = m_ilIcons;
 
-			int nWidth = m_lvHistory.ClientRectangle.Width / 3;
-			m_lvHistory.Columns.Add(KPRes.Version, nWidth);
-			m_lvHistory.Columns.Add(KPRes.Title, nWidth);
-			m_lvHistory.Columns.Add(KPRes.UserName, nWidth);
+			m_lvHistory.Columns.Add(KPRes.Version);
+			m_lvHistory.Columns.Add(KPRes.Title);
+			m_lvHistory.Columns.Add(KPRes.UserName);
+			m_lvHistory.Columns.Add(KPRes.Size, 72, HorizontalAlignment.Right);
 
 			UpdateHistoryList();
 
@@ -462,6 +468,7 @@ namespace KeePass.Forms
 
 				lvi.SubItems.Add(pe.Strings.ReadSafe(PwDefs.TitleField));
 				lvi.SubItems.Add(pe.Strings.ReadSafe(PwDefs.UserNameField));
+				lvi.SubItems.Add(StrUtil.FormatDataSizeKB(pe.GetSize()));
 			}
 		}
 
@@ -479,10 +486,13 @@ namespace KeePass.Forms
 			dx = m_lvAutoType.ClientRectangle.Width;
 			m_lvAutoType.Columns[0].Width = m_lvAutoType.Columns[1].Width = dx / 2;
 
-			Debug.Assert(m_lvHistory.Columns.Count == 3);
+			Debug.Assert(m_lvHistory.Columns.Count == 4);
 			dx = m_lvHistory.ClientRectangle.Width;
-			m_lvHistory.Columns[0].Width = m_lvHistory.Columns[1].Width =
-				m_lvHistory.Columns[2].Width = dx / 3;
+			int dt = dx / 85;
+			m_lvHistory.Columns[0].Width = (dx * 2) / 7 + dt;
+			m_lvHistory.Columns[1].Width = (dx * 2) / 7;
+			m_lvHistory.Columns[2].Width = ((dx * 2) / 7) - (dt * 2);
+			m_lvHistory.Columns[3].Width = (dx / 7) + dt;
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -503,6 +513,10 @@ namespace KeePass.Forms
 			m_ttRect.SetToolTip(m_cbHidePassword, KPRes.TogglePasswordAsterisks);
 			m_ttRect.SetToolTip(m_btnGenPw, KPRes.GeneratePassword);
 			m_ttRect.SetToolTip(m_btnStandardExpires, KPRes.StandardExpireSelect);
+
+			m_ttBalloon.SetToolTip(m_tbRepeatPassword, KPRes.PasswordRepeatHint);
+
+			m_ttValidationError.ToolTipTitle = KPRes.ValidationFailed;
 
 			m_clrNormalBackColor = m_tbPassword.BackColor;
 			m_dynGenProfiles = new DynamicMenu(m_ctxPwGenProfiles.DropDownItems);
@@ -544,7 +558,7 @@ namespace KeePass.Forms
 			if(m_pwEditMode == PwEditMode.ViewReadOnlyEntry)
 				m_bLockEnabledState = true;
 
-			UIUtil.PrepareStandardMultilineControl(m_rtNotes, true);
+			UIUtil.PrepareStandardMultilineControl(m_rtNotes, true, true);
 
 			m_bInitializing = true;
 
@@ -679,7 +693,7 @@ namespace KeePass.Forms
 
 			m_pwEntry.History = m_vHistory; // Must be called before CreateBackup()
 			bool bCreateBackup = (m_pwEditMode != PwEditMode.AddNewEntry);
-			if(bCreateBackup) m_pwEntry.CreateBackup();
+			if(bCreateBackup) m_pwEntry.CreateBackup(null);
 
 			m_pwEntry.IconId = m_pwEntryIcon;
 			m_pwEntry.CustomIconUuid = m_pwCustomIconID;
@@ -728,6 +742,8 @@ namespace KeePass.Forms
 					m_pwEntry.History.Remove(m_pwEntry.History.GetAt(
 						m_pwEntry.History.UCount - 1)); // Undo backup
 			}
+
+			m_pwEntry.MaintainBackups(m_pwDatabase);
 
 			if(this.EntrySaved != null) this.EntrySaved(this, EventArgs.Empty);
 
@@ -815,7 +831,7 @@ namespace KeePass.Forms
 			EditStringForm esf = new EditStringForm();
 			esf.InitEx(m_vStrings, null, null, m_pwDatabase);
 
-			if(esf.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(esf) == DialogResult.OK)
 			{
 				UpdateEntryStrings(false, false);
 				ResizeColumnHeaders();
@@ -837,7 +853,7 @@ namespace KeePass.Forms
 
 			EditStringForm esf = new EditStringForm();
 			esf.InitEx(m_vStrings, strName, psValue, m_pwDatabase);
-			if(esf.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(esf) == DialogResult.OK)
 				UpdateEntryStrings(false, false);
 		}
 
@@ -972,6 +988,7 @@ namespace KeePass.Forms
 					foreach(ListViewItem lvi in lvsc)
 						SaveAttachmentTo(lvi, strRootPath + lvi.Text, true);
 				}
+				fbd.Dispose();
 			}
 		}
 
@@ -1008,7 +1025,7 @@ namespace KeePass.Forms
 			EditAutoTypeItemForm dlg = new EditAutoTypeItemForm();
 			dlg.InitEx(m_atConfig, m_vStrings, null, false);
 
-			if(dlg.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(dlg) == DialogResult.OK)
 			{
 				UpdateAutoTypeList();
 				ResizeColumnHeaders();
@@ -1027,7 +1044,7 @@ namespace KeePass.Forms
 			string strOriginalName = lvSel[0].Text;
 			dlg.InitEx(m_atConfig, m_vStrings, strOriginalName, false);
 
-			if(dlg.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(dlg) == DialogResult.OK)
 				UpdateAutoTypeList();
 		}
 
@@ -1063,7 +1080,7 @@ namespace KeePass.Forms
 			pwf.InitEx(pe, PwEditMode.ViewReadOnlyEntry, m_pwDatabase,
 				m_ilIcons, false, false);
 
-			pwf.ShowDialog();
+			UIUtil.ShowDialogAndDestroy(pwf);
 		}
 
 		private void OnBtnHistoryDelete(object sender, EventArgs e)
@@ -1093,8 +1110,8 @@ namespace KeePass.Forms
 			ListView.SelectedIndexCollection lvsi = m_lvHistory.SelectedIndices;
 			if(lvsi.Count != 1) { Debug.Assert(false); return; }
 
-			m_pwEntry.RestoreFromBackup((uint)lvsi[0]);
-			this.DialogResult = DialogResult.OK;
+			m_pwEntry.RestoreFromBackup((uint)lvsi[0], m_pwDatabase);
+			this.DialogResult = DialogResult.OK; // Doesn't invoke OnBtnOK
 		}
 
 		private void OnHistorySelectedIndexChanged(object sender, EventArgs e)
@@ -1175,14 +1192,16 @@ namespace KeePass.Forms
 				if((lvsc != null) && (lvsc.Count > 0))
 				{
 					string strName = lvsc[0].Text;
-					ClipboardUtil.Copy(m_vStrings.GetSafe(strName), true, null, m_pwDatabase);
+					ClipboardUtil.Copy(m_vStrings.ReadSafe(strName), true, true,
+						null, m_pwDatabase, this.Handle);
 				}
 			}
 			else if(m_lvAutoType.Focused)
 			{
 				lvsc = m_lvAutoType.SelectedItems;
 				if((lvsc != null) && (lvsc.Count > 0))
-					ClipboardUtil.Copy(lvsc[0].SubItems[1].Text, true, null, m_pwDatabase);
+					ClipboardUtil.Copy(lvsc[0].SubItems[1].Text, true, true, null,
+						m_pwDatabase, this.Handle);
 			}
 			else { Debug.Assert(false); }
 		}
@@ -1209,6 +1228,7 @@ namespace KeePass.Forms
 				UIUtil.SetButtonImage(m_btnIcon, m_ilIcons.Images[
 					(int)m_pwEntryIcon], true);
 			}
+			UIUtil.DestroyForm(ipf);
 		}
 
 		private void OnAutoTypeSeqInheritCheckedChanged(object sender, EventArgs e)
@@ -1230,7 +1250,7 @@ namespace KeePass.Forms
 			EditAutoTypeItemForm ef = new EditAutoTypeItemForm();
 			ef.InitEx(m_atConfig, m_vStrings, "(" + KPRes.Default + ")", true);
 
-			if(ef.ShowDialog() == DialogResult.OK)
+			if(UIUtil.ShowDialogAndDestroy(ef) == DialogResult.OK)
 				m_tbDefaultAutoTypeSeq.Text = m_atConfig.DefaultSequence;
 		}
 
@@ -1281,12 +1301,12 @@ namespace KeePass.Forms
 			}
 			else if(strStandardField == PwDefs.PasswordField)
 			{
-				string strPw = Encoding.UTF8.GetString(m_secPassword.ToUtf8());
+				string strPw = StrUtil.Utf8.GetString(m_secPassword.ToUtf8());
 				if((strPw.Length > 0) && (strText.Length > 0))
 					strPw += ", ";
 				m_tbPassword.Text = (strPw + strText);
 
-				string strRep = Encoding.UTF8.GetString(m_secRepeat.ToUtf8());
+				string strRep = StrUtil.Utf8.GetString(m_secRepeat.ToUtf8());
 				if((strRep.Length > 0) && (strText.Length > 0))
 					strRep += ", ";
 				m_tbRepeatPassword.Text = (strRep + strText);
@@ -1365,6 +1385,7 @@ namespace KeePass.Forms
 				m_secRepeat.SetPassword(pbNew);
 				Array.Clear(pbNew, 0, pbNew.Length);
 			}
+			UIUtil.DestroyForm(pgf);
 
 			EnableControlsEx();
 		}
@@ -1487,7 +1508,7 @@ namespace KeePass.Forms
 			DataViewerForm dvf = new DataViewerForm();
 			dvf.InitEx(strDataItem, pbData.ReadData());
 
-			dvf.ShowDialog();
+			UIUtil.ShowDialogAndDestroy(dvf);
 		}
 
 		private void OnBtnTools(object sender, EventArgs e)
@@ -1541,9 +1562,11 @@ namespace KeePass.Forms
 			FieldRefForm dlg = new FieldRefForm();
 			dlg.InitEx(m_pwDatabase.RootGroup, m_ilIcons);
 
-			if(dlg.ShowDialog() == DialogResult.OK) return dlg.ResultReference;
+			string strResult = string.Empty;
+			if(dlg.ShowDialog() == DialogResult.OK) strResult = dlg.ResultReference;
 
-			return string.Empty;
+			UIUtil.DestroyForm(dlg);
+			return strResult;
 		}
 
 		private void OnFieldRefInTitle(object sender, EventArgs e)
@@ -1561,11 +1584,11 @@ namespace KeePass.Forms
 			string strRef = CreateFieldReference();
 			if(strRef.Length == 0) return;
 
-			string strPw = Encoding.UTF8.GetString(m_secPassword.ToUtf8());
-			string strRep = Encoding.UTF8.GetString(m_secRepeat.ToUtf8());
+			string strPw = StrUtil.Utf8.GetString(m_secPassword.ToUtf8());
+			string strRep = StrUtil.Utf8.GetString(m_secRepeat.ToUtf8());
 
-			m_secPassword.SetPassword(Encoding.UTF8.GetBytes(strPw + strRef));
-			m_secRepeat.SetPassword(Encoding.UTF8.GetBytes(strRep + strRef));
+			m_secPassword.SetPassword(StrUtil.Utf8.GetBytes(strPw + strRef));
+			m_secRepeat.SetPassword(StrUtil.Utf8.GetBytes(strRep + strRef));
 		}
 
 		private void OnFieldRefInUrl(object sender, EventArgs e)
@@ -1591,6 +1614,25 @@ namespace KeePass.Forms
 
 		private void OnFormClosing(object sender, FormClosingEventArgs e)
 		{
+			/* VistaTaskDialog dlg = new VistaTaskDialog(this.Handle);
+			dlg.AddButton((int)DialogResult.Yes, KPRes.Yes, null);
+			dlg.AddButton((int)DialogResult.No, KPRes.No, null);
+			dlg.CommandLinks = false;
+			dlg.Content = KPRes.CloseDialogWarning;
+			dlg.MainInstruction = KPRes.CloseDialogConfirmation;
+			dlg.VerificationText = KPRes.DialogNoShowAgain;
+			dlg.WindowTitle = PwDefs.ShortProductName;
+
+			if(dlg.ShowDialog())
+			{
+				if((dlg.Result == (int)DialogResult.No) ||
+					(dlg.Result == (int)DialogResult.Cancel))
+				{
+					e.Cancel = true;
+					return;
+				}
+			} */
+
 			CleanUpEx();
 		}
 

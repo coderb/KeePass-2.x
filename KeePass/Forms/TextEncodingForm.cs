@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ namespace KeePass.Forms
 			null,
 			Encoding.Default,
 			Encoding.ASCII,
-			Encoding.UTF7, Encoding.UTF8,
+			Encoding.UTF7, new UTF8Encoding(false),
 			Encoding.UTF32,
 			Encoding.Unicode, Encoding.BigEndianUnicode
 		};
@@ -108,7 +108,7 @@ namespace KeePass.Forms
 			try
 			{
 				Encoding enc = m_vEnc[m_cmbEnc.SelectedIndex];
-				if(enc == null) enc = Encoding.UTF8;
+				if(enc == null) enc = new UTF8Encoding(false);
 
 				m_rtbPreview.Text = enc.GetString(m_pbData);
 			}

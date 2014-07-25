@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -135,12 +135,15 @@ namespace KeePass.Forms
 			if(BannerFactory.CustomGenerator != null) m_cmbBannerStyle.Enabled = false;
 
 			int nWidth = m_lvPolicy.ClientRectangle.Width - UIUtil.GetVScrollBarWidth() - 1;
-			m_lvPolicy.Columns.Add(KPRes.Feature, (nWidth * 2) / 7);
-			m_lvPolicy.Columns.Add(KPRes.Description, (nWidth * 5) / 7);
+			m_lvPolicy.Columns.Add(KPRes.Feature, (nWidth * 10) / 29);
+			m_lvPolicy.Columns.Add(KPRes.Description, (nWidth * 19) / 29);
 
-			m_hkGlobalAutoType = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys, m_tbGlobalAutoType);
-			m_hkSelectedAutoType = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys, m_tbSelAutoTypeHotKey);
-			m_hkShowWindow = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys, m_tbShowWindowHotKey);
+			m_hkGlobalAutoType = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys,
+				m_tbGlobalAutoType, true);
+			m_hkSelectedAutoType = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys,
+				m_tbSelAutoTypeHotKey, true);
+			m_hkShowWindow = HotKeyControlEx.ReplaceTextBox(m_grpHotKeys,
+				m_tbShowWindowHotKey, true);
 
 			if(!NativeLib.IsUnix())
 			{
@@ -189,6 +192,11 @@ namespace KeePass.Forms
 			m_numLockAfterTime.Value = (bLockTime ? uLockTime : 300);
 			m_cbLockAfterTime.Checked = bLockTime;
 
+			uLockTime = Program.Config.Security.WorkspaceLocking.LockAfterGlobalTime;
+			bLockTime = (uLockTime > 0);
+			m_numLockAfterGlobalTime.Value = (bLockTime ? uLockTime : 240);
+			m_cbLockAfterGlobalTime.Checked = bLockTime;
+
 			int nDefaultExpireDays = Program.Config.Defaults.NewEntryExpiresInDays;
 			if(nDefaultExpireDays < 0)
 				m_cbDefaultExpireDays.Checked = false;
@@ -216,19 +224,27 @@ namespace KeePass.Forms
 			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
 				"LockOnWindowMinimize", m_lvSecurityOptions, lvg, KPRes.LockOnMinimize);
 			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
-				"LockOnSessionLock", m_lvSecurityOptions, lvg, KPRes.LockOnSessionLock);
-			m_cdxSecurityOptions.CreateItem(Program.Config.Security, "ClipboardClearOnExit",
-				m_lvSecurityOptions, lvg, KPRes.ClipboardClearOnExit);
+				"LockOnSessionSwitch", m_lvSecurityOptions, lvg, KPRes.LockOnSessionSwitch);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
+				"LockOnSuspend", m_lvSecurityOptions, lvg, KPRes.LockOnSuspend);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
+				"LockOnRemoteControlChange", m_lvSecurityOptions, lvg, KPRes.LockOnRemoteControlChange);
 			m_cdxSecurityOptions.CreateItem(Program.Config.Security.WorkspaceLocking,
 				"ExitInsteadOfLockingAfterTime", m_lvSecurityOptions, lvg, KPRes.ExitInsteadOfLockingAfterTime);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security, "ClipboardClearOnExit",
+				m_lvSecurityOptions, lvg, KPRes.ClipboardClearOnExit);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security,
+				"UseClipboardViewerIgnoreFormat", m_lvSecurityOptions, lvg,
+				KPRes.ClipboardViewerIgnoreFormat + " " + KPRes.NotRecommended);
 
 			if(NativeLib.IsLibraryInstalled())
 				m_cdxSecurityOptions.CreateItem(Program.Config.Native, "NativeKeyTransformations",
 					m_lvSecurityOptions, lvg, KPRes.NativeLibUse);
 
-			m_cdxSecurityOptions.CreateItem(Program.Config.Security,
-				"UseClipboardViewerIgnoreFormat", m_lvSecurityOptions, lvg,
-				KPRes.ClipboardViewerIgnoreFormat + " " + KPRes.NotRecommended);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security, "MasterKeyOnSecureDesktop",
+				m_lvSecurityOptions, lvg, KPRes.MasterKeyOnSecureDesktop);
+			m_cdxSecurityOptions.CreateItem(Program.Config.Security, "ClearKeyCommandLineParams",
+				m_lvSecurityOptions, lvg, KPRes.ClearKeyCmdLineParams);
 
 			m_cdxSecurityOptions.UpdateData(false);
 			m_lvSecurityOptions.Columns[0].Width = m_lvSecurityOptions.ClientRectangle.Width -
@@ -247,16 +263,22 @@ namespace KeePass.Forms
 		{
 			LoadPolicyOption("Plugins", KPRes.Plugins, KPRes.PolicyPluginsDesc);
 			LoadPolicyOption("Export", KPRes.Export, KPRes.PolicyExportDesc);
+			LoadPolicyOption("ExportNoKey", KPRes.Export + " - " + KPRes.NoKeyRepeat,
+				KPRes.PolicyExportNoKeyDesc);
 			LoadPolicyOption("Import", KPRes.Import, KPRes.PolicyImportDesc);
 			LoadPolicyOption("Print", KPRes.Print, KPRes.PolicyPrintDesc);
 			LoadPolicyOption("NewFile", KPRes.NewDatabase, KPRes.PolicyNewDatabaseDesc);
 			LoadPolicyOption("SaveFile", KPRes.SaveDatabase, KPRes.PolicySaveDatabaseDesc);
 			LoadPolicyOption("AutoType", KPRes.AutoType, KPRes.PolicyAutoTypeDesc);
+			LoadPolicyOption("AutoTypeWithoutContext", KPRes.AutoType + " - " +
+				KPRes.WithoutContext, KPRes.PolicyAutoTypeWithoutContextDesc);
 			LoadPolicyOption("CopyToClipboard", KPRes.Copy, KPRes.PolicyClipboardDesc);
 			LoadPolicyOption("CopyWholeEntries", KPRes.CopyWholeEntries, KPRes.PolicyCopyWholeEntriesDesc);
 			LoadPolicyOption("DragDrop", KPRes.DragDrop, KPRes.PolicyDragDropDesc);
 			LoadPolicyOption("UnhidePasswords", KPRes.UnhidePasswords, KPRes.UnhidePasswordsDesc);
 			LoadPolicyOption("ChangeMasterKey", KPRes.ChangeMasterKey, KPRes.PolicyChangeMasterKey);
+			LoadPolicyOption("ChangeMasterKeyNoKey", KPRes.ChangeMasterKey + " - " +
+				KPRes.NoKeyRepeat, KPRes.PolicyChangeMasterKeyNoKeyDesc);
 			LoadPolicyOption("EditTriggers", KPRes.TriggersEdit, KPRes.PolicyTriggersEditDesc);
 
 			m_cdxPolicy.UpdateData(false);
@@ -390,6 +412,8 @@ namespace KeePass.Forms
 				m_lvAdvanced, lvg, KPRes.AutoTypePrependInitSeqForIE);
 			m_cdxAdvanced.CreateItem(Program.Config.Integration, "AutoTypeReleaseAltWithKeyPress",
 				m_lvAdvanced, lvg, KPRes.AutoTypeReleaseAltWithKeyPress);
+			m_cdxAdvanced.CreateItem(Program.Config.Integration, "AutoTypeCancelOnWindowChange",
+				m_lvAdvanced, lvg, KPRes.AutoTypeCancelOnWindowChange);
 
 			lvg = new ListViewGroup(KPRes.Advanced);
 			m_lvAdvanced.Groups.Add(lvg);
@@ -401,12 +425,16 @@ namespace KeePass.Forms
 				m_lvAdvanced, lvg, KPRes.RememberKeySources);
 			m_cdxAdvanced.CreateItem(Program.Config.UI.Hiding, "SeparateHidingSettings",
 				m_lvAdvanced, lvg, KPRes.RememberHidingSettings);
+			m_cdxAdvanced.CreateItem(Program.Config.UI.Hiding, "UnhideButtonAlsoUnhidesSource",
+				m_lvAdvanced, lvg, KPRes.UnhideSourceCharactersToo);
 			m_cdxAdvanced.CreateItem(Program.Config.Application, "VerifyWrittenFileAfterSaving",
 				m_lvAdvanced, lvg, KPRes.VerifyWrittenFileAfterSave);
 			m_cdxAdvanced.CreateItem(Program.Config.Application, "UseTransactedFileWrites",
 				m_lvAdvanced, lvg, KPRes.UseTransactedDatabaseWrites);
 			m_cdxAdvanced.CreateItem(Program.Config.Defaults, "TanExpiresOnUse",
 				m_lvAdvanced, lvg, KPRes.TanExpiresOnUse);
+			m_cdxAdvanced.CreateItem(Program.Config.Defaults, "RecycleBinCollapse",
+				m_lvAdvanced, lvg, KPRes.RecycleBinCollapse);
 			m_cdxAdvanced.CreateItem(Program.Config.UI, "OptimizeForScreenReader",
 				m_lvAdvanced, lvg, KPRes.OptimizeForScreenReader);
 
@@ -443,6 +471,12 @@ namespace KeePass.Forms
 			else
 				Program.Config.Security.WorkspaceLocking.LockAfterTime =
 					(uint)m_numLockAfterTime.Value;
+
+			if(!m_cbLockAfterGlobalTime.Checked)
+				Program.Config.Security.WorkspaceLocking.LockAfterGlobalTime = 0;
+			else
+				Program.Config.Security.WorkspaceLocking.LockAfterGlobalTime =
+					(uint)m_numLockAfterGlobalTime.Value;
 
 			if(m_cbDefaultExpireDays.Checked)
 				Program.Config.Defaults.NewEntryExpiresInDays =
@@ -520,6 +554,15 @@ namespace KeePass.Forms
 			m_bBlockUIUpdate = true;
 
 			m_numLockAfterTime.Enabled = m_cbLockAfterTime.Checked;
+
+			if(WinUtil.IsWindows9x || NativeLib.IsUnix())
+			{
+				m_cbLockAfterGlobalTime.Checked = false;
+				m_cbLockAfterGlobalTime.Enabled = false;
+				m_numLockAfterGlobalTime.Enabled = false;
+			}
+			else m_numLockAfterGlobalTime.Enabled = m_cbLockAfterGlobalTime.Checked;
+			
 			m_numDefaultExpireDays.Enabled = m_cbDefaultExpireDays.Checked;
 			m_numClipClearTime.Enabled = m_cbClipClearTime.Checked;
 
@@ -552,11 +595,6 @@ namespace KeePass.Forms
 			UpdateUIState();
 		}
 
-		private void OnLockAfterTimeValueChanged(object sender, EventArgs e)
-		{
-			UpdateUIState();
-		}
-
 		private void OnBtnSelListFont(object sender, EventArgs e)
 		{
 			FontDialog dlg = UIUtil.CreateFontDialog(false);
@@ -574,6 +612,7 @@ namespace KeePass.Forms
 				Program.Config.UI.StandardFont = new AceFont(dlg.Font);
 				Program.Config.UI.StandardFont.OverrideUIDefault = true;
 			}
+			dlg.Dispose();
 		}
 
 		private void OnBtnSelPwFont(object sender, EventArgs e)
@@ -598,6 +637,7 @@ namespace KeePass.Forms
 				Program.Config.UI.PasswordFont = new AceFont(dlg.Font);
 				Program.Config.UI.PasswordFont.OverrideUIDefault = true;
 			}
+			dlg.Dispose();
 		}
 
 		private void OnDefaultExpireDaysCheckedChanged(object sender, EventArgs e)
@@ -667,7 +707,7 @@ namespace KeePass.Forms
 		{
 			UrlSchemesForm dlg = new UrlSchemesForm();
 			dlg.InitEx(m_aceUrlSchemeOverrides);
-			dlg.ShowDialog();
+			UIUtil.ShowDialogAndDestroy(dlg);
 		}
 
 		private void OnFormClosing(object sender, FormClosingEventArgs e)
@@ -678,6 +718,11 @@ namespace KeePass.Forms
 		private void OnHotKeyHelpLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			AppHelp.ShowHelp(AppDefs.HelpTopics.Setup, AppDefs.HelpTopics.SetupMono);
+		}
+
+		private void OnLockAfterGlobalTimeCheckedChanged(object sender, EventArgs e)
+		{
+			UpdateUIState();
 		}
 	}
 }

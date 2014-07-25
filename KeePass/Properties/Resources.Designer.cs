@@ -459,6 +459,13 @@ namespace KeePass.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap B16x16_Imp_DataVault {
+            get {
+                object obj = ResourceManager.GetObject("B16x16_Imp_DataVault", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap B16x16_Imp_FlexWallet {
             get {
                 object obj = ResourceManager.GetObject("B16x16_Imp_FlexWallet", resourceCulture);
@@ -557,9 +564,23 @@ namespace KeePass.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap B16x16_Imp_PwsPlus {
+            get {
+                object obj = ResourceManager.GetObject("B16x16_Imp_PwsPlus", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap B16x16_Imp_PwTresor {
             get {
                 object obj = ResourceManager.GetObject("B16x16_Imp_PwTresor", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap B16x16_Imp_Revelation {
+            get {
+                object obj = ResourceManager.GetObject("B16x16_Imp_Revelation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -602,6 +623,13 @@ namespace KeePass.Properties {
         internal static System.Drawing.Bitmap B16x16_Imp_ZdnPwPro {
             get {
                 object obj = ResourceManager.GetObject("B16x16_Imp_ZdnPwPro", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap B16x16_KaboodleLoop {
+            get {
+                object obj = ResourceManager.GetObject("B16x16_KaboodleLoop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -707,6 +735,13 @@ namespace KeePass.Properties {
         internal static System.Drawing.Bitmap B16x16_Make_KDevelop {
             get {
                 object obj = ResourceManager.GetObject("B16x16_Make_KDevelop", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap B16x16_MenuRadio {
+            get {
+                object obj = ResourceManager.GetObject("B16x16_MenuRadio", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

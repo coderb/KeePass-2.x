@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ using System.IO;
 
 using KeePass.App;
 using KeePass.Forms;
+using KeePass.UI;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
@@ -46,15 +47,16 @@ namespace KeePass.DataExchange
 			ExchangeDataForm dlg = new ExchangeDataForm();
 			dlg.InitEx(true, pwExportInfo.ContextDatabase, pwExportInfo.DataGroup);
 
+			bool bResult = false;
 			if(dlg.ShowDialog() == DialogResult.OK)
 			{
 				FileFormatProvider ffp = dlg.ResultFormat;
-				if(ffp == null) { Debug.Assert(false); return false; }
+				if(ffp == null) { Debug.Assert(false); goto ExpZRet; }
 				if(ffp.RequiresFile)
 				{
-					if(dlg.ResultFiles.Length != 1) { Debug.Assert(false); return false; }
-					if(dlg.ResultFiles[0] == null) { Debug.Assert(false); return false; }
-					if(dlg.ResultFiles[0].Length == 0) { Debug.Assert(false); return false; }
+					if(dlg.ResultFiles.Length != 1) { Debug.Assert(false); goto ExpZRet; }
+					if(dlg.ResultFiles[0] == null) { Debug.Assert(false); goto ExpZRet; }
+					if(dlg.ResultFiles[0].Length == 0) { Debug.Assert(false); goto ExpZRet; }
 				}
 
 				Application.DoEvents(); // Redraw parent window
@@ -64,12 +66,14 @@ namespace KeePass.DataExchange
 
 				try
 				{
-					return Export(pwExportInfo, dlg.ResultFormat, iocOutput, slLogger);
+					bResult = Export(pwExportInfo, dlg.ResultFormat, iocOutput, slLogger);
 				}
 				catch(Exception ex) { MessageService.ShowWarning(ex); }
 			}
 
-			return false;
+		ExpZRet:
+			UIUtil.DestroyForm(dlg);
+			return bResult;
 		}
 
 		public static bool Export(PwExportInfo pwExportInfo, string strFormatName,

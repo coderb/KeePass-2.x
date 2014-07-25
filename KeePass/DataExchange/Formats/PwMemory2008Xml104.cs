@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ using KeePass.Resources;
 using KeePassLib;
 using KeePassLib.Interfaces;
 using KeePassLib.Security;
+using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
@@ -52,7 +53,7 @@ namespace KeePass.DataExchange.Formats
 			IStatusLogger slLogger)
 		{
 			string str = PwMemory2008Xml104.Preprocess(sInput);
-			MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(str), false);
+			MemoryStream ms = new MemoryStream(StrUtil.Utf8.GetBytes(str), false);
 
 			XmlSerializer xs = new XmlSerializer(typeof(Priv_PwMem2008XmlFile));
 			Priv_PwMem2008XmlFile f = (Priv_PwMem2008XmlFile)xs.Deserialize(ms);

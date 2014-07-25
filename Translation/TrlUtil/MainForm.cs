@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -580,7 +580,10 @@ namespace TrlUtil
 					string strTrl = kpi.Value;
 					if(string.IsNullOrEmpty(strEn) || string.IsNullOrEmpty(strTrl)) continue;
 
-					if(strEn.EndsWith("...") && !strTrl.EndsWith("..."))
+					bool bEllEn = (strEn.EndsWith(@"...") || strEn.EndsWith(@"…"));
+					bool bEllTrl = (strTrl.EndsWith(@"...") || strTrl.EndsWith(@"…"));
+
+					if(bEllEn && !bEllTrl)
 						MessageService.ShowWarning("Warning! The English string",
 							strEn, "ends with 3 dots, but the translated string does not:", strTrl);
 				}
@@ -665,7 +668,7 @@ namespace TrlUtil
 
 		private void OnStrDoubleClick(object sender, EventArgs e)
 		{
-			this.ActiveControl = m_tbStrTrl;
+			UIUtil.SetFocus(m_tbStrTrl, this);
 		}
 
 		private void OnCustomControlsAfterSelect(object sender, TreeViewEventArgs e)

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Drawing;
+
+using KeePassLib.Utility;
 
 namespace KeePassLib.Translation
 {
@@ -294,7 +296,7 @@ namespace KeePassLib.Translation
 
 			WriteControlDependentParams(sb, c);
 
-			byte[] pb = Encoding.UTF8.GetBytes(sb.ToString());
+			byte[] pb = StrUtil.Utf8.GetBytes(sb.ToString());
 
 			SHA256Managed sha256 = new SHA256Managed();
 			byte[] pbSha = sha256.ComputeHash(pb);

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2010 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2011 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ namespace KeePass.Util
 				m_vContents = new List<KeyValuePair<string, object>>();
 
 				IDataObject idoClip = Clipboard.GetDataObject();
-
 				foreach(string strFormat in idoClip.GetFormats())
 				{
 					KeyValuePair<string, object> kvp =
@@ -80,13 +79,16 @@ namespace KeePass.Util
 
 		private void SetDataPriv()
 		{
-			ClipboardUtil.Clear();
-
-			if(m_strText != null) Clipboard.SetText(m_strText);
+			if(m_strText != null)
+				ClipboardUtil.Copy(m_strText, false, false, null, null, IntPtr.Zero);
 			else if(m_vContents != null)
 			{
+				DataObject dObj = new DataObject();
 				foreach(KeyValuePair<string, object> kvp in m_vContents)
-					Clipboard.SetData(kvp.Key, kvp.Value);
+					dObj.SetData(kvp.Key, kvp.Value);
+
+				ClipboardUtil.Clear();
+				Clipboard.SetDataObject(dObj);
 			}
 		}
 	}
